@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.js"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "https://deno.land/std/testing/": "https://deno.land/std@0.x.x/testing/"
+  }
+}
