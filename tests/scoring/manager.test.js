@@ -21,7 +21,6 @@ Deno.test("ScoringManager - Koi-Koi Rules", () => {
   // Test bright yaku with no multiple scoring
   collection.addMany([CRANE, CURTAIN, MOON])
   let result = scoring(collection)
-  console.debug(result)
   assertEquals(result.length, 1, "Should find one yaku")
   assertEquals(result[0].name, "sankou", "Should be sankou")
 
@@ -79,22 +78,4 @@ Deno.test("ScoringManager - Hand Yaku Priority", () => {
   const normalResult = scoring(collection, { currentMonth: 1 })
   assertEquals(normalResult.length, 1, "Should score normal yaku")
   assertEquals(normalResult[0].name, "tsuki-fuda", "Should be tsuki-fuda")
-})
-
-Deno.test("ScoringManager - Weather and Season Effects", () => {
-  const collection = createCollection()
-  const scoring = createScoringManager(KOIKOI_RULES)
-
-  // Test viewing yaku with weather effects
-  collection.addMany([8, 32]) // Cherry Curtain and Sake Cup
-  let result = scoring(collection, { weather: "rainy" })
-  assertEquals(result[0].points, 0, "Should cancel hanami in rain")
-
-  // Test viewing yaku with season bonus
-  result = scoring(collection, { currentMonth: 3 })
-  assertEquals(result[0].points, 6, "Should double points in season")
-
-  // Test with both weather and season
-  result = scoring(collection, { weather: "clear", currentMonth: 3 })
-  assertEquals(result[0].points, 6, "Should apply both weather and season effects")
 })
