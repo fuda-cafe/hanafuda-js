@@ -1,81 +1,78 @@
 /**
- * @typedef {'gokou'|'shikou'|'ame-shikou'|'sankou'|'hanami-zake'|'tsukimi-zake'|
- *           'ino-shika-chou'|'aka-tan'|'ao-tan'|'tan-zaku'|'tane-zaku'|'kasu'|
- *           'kuttsuki'|'teshi'|'tsuki-fuda'} YakuName
+ * @typedef {import('./types.js').YakuName} YakuName
+ * @typedef {import('./types.js').YakuDefinition} YakuDefinition
+ * @typedef {import('./types.js').CardPattern} CardPattern
  */
+
+import { getCard } from "../../core/cards.js"
 
 /**
- * @typedef {Object} YakuContext
- * @property {number} currentMonth - Current month in the game (for tsuki-fuda yaku)
- * @property {import('../rules.js').RuleConfig} rules - Rule configuration
- * @property {Array<{name: YakuName, points: number}>} [completedYaku] - List of already completed yaku
- * @property {import('../../collection.js').CardCollection} [tableCards] - Cards currently on the table
- * @property {number[]} [selectedSakeCupTypes] - Card types the sake cup is being counted as (for CHOOSE_ONE mode)
+ * Check if a card matches a pattern
+ * @param {number} cardIndex
+ * @param {CardPattern} pattern
+ * @returns {boolean}
  */
+const matchesPattern = (cardIndex, pattern) => {
+  const card = getCard(cardIndex)
+  if (!card) return false
 
-export class BaseYaku {
-  /** @type {YakuName} */
-  #name
-  /** @type {string[]} */
-  #description
-  /** @type {number} */
-  #points
-  /** @type {number[]} */
-  #requiredCards
-  /** @type {number} */
-  #numRequired
+  if (pattern.id && card.id !== pattern.id) return false
+  if (pattern.type && card.type !== pattern.type) return false
+  if (pattern.flower && card.flower !== pattern.flower) return false
+  if (pattern.month && card.month !== pattern.month) return false
 
-  /**
-   * @param {YakuName} name
-   * @param {string[]} description
-   * @param {number} points
-   * @param {number[]} requiredCards
-   * @param {number} numRequired
-   */
-  constructor(name, description, points, requiredCards, numRequired) {
-    this.#name = name
-    this.#description = description
-    this.#points = points
-    this.#requiredCards = requiredCards
-    this.#numRequired = numRequired
+  return true
+}
+
+/**
+ * Find all cards in a collection that match a pattern
+ * @param {import('../../core/collection.js').CardCollection} collection
+ * @param {CardPattern} pattern
+ * @returns {number[]}
+ */
+const findMatches = (collection, pattern) => {
+  const matches = []
+  for (const cardIndex of collection) {
+    if (matchesPattern(cardIndex, pattern)) {
+      matches.push(cardIndex)
+    }
   }
+  return matches
+}
 
-  /**
-   * Check if the yaku is complete in the given collection
-   * @param {import('../../collection.js').CardCollection} collection
-   * @param {YakuContext} [context]
-   * @returns {number} Points earned (0 if yaku is not complete)
-   */
-  check(collection, context = null) {
-    if (collection.size < this.#numRequired) return 0
-    const progress = this.find(collection)
-    if (progress.length < this.#numRequired) return 0
-    return this.#points
+/**
+ * Create a new yaku definition
+ * @param {YakuDefinition} definition
+ * @returns {YakuDefinition & { check: (collection: import('../../core/collection.js').Collection) => number }}
+ */
+export const defineYaku = (definition) => {
+  // Validate the definition
+  if (!definition.name || !definition.description || !definition.points || !definition.pattern) {
+    throw new Error("Invalid yaku definition")
   }
 
-  /**
-   * Find all cards in the collection that contribute to this yaku
-   * @param {import('../../collection.js').CardCollection} collection
-   * @returns {number[]}
-   */
-  find(collection) {
-    return this.#requiredCards.filter((card) => collection.contains(card))
-  }
+  return {
+    ...definition,
+    /**
+     * Check if the yaku pattern is matched in the given collection
+     * @param {import('../../core/collection.js').Collection} collection
+     * @returns {number} Base points earned (0 if pattern is not matched)
+     */
+    check(collection) {
+      // Early return if collection is too small
+      const minRequired = definition.pattern.cards.reduce(
+        (sum, pattern) => sum + (pattern.count || 1),
+        0
+      )
+      if (collection.size() < minRequired) return 0
 
-  // Getters
-  get name() {
-    return this.#name
-  }
-  get description() {
-    return this.#description
-  }
-  get points() {
-    return this.#points
-  }
-  get requiredCards() {
-    return [...this.#requiredCards]
-  }
-  get numRequired() {
-    return this.#numRequired
+      // Check each card pattern
+      for (const pattern of definition.pattern.cards) {
+        const matches = findMatches(collection, pattern)
+        if (matches.length < (pattern.count || 1)) return 0
+      }
+
+      return definition.points
+    },
   }
 }
