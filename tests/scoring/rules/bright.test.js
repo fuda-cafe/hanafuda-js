@@ -23,7 +23,6 @@ Deno.test("Bright Yaku Precedence", () => {
   // Should score Ame-shikou (4 brights) instead of Sankou
   completed = checkBrightYaku(collection)
   assertEquals(completed.length, 1)
-  console.debug(completed)
   assertEquals(completed[0].name, "ame-shikou")
   assertEquals(completed[0].points, 7)
 
