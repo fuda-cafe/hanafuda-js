@@ -20,14 +20,25 @@ Deno.test("Bright Yaku Precedence", () => {
   // Add 4th bright
   collection.add(BRIGHT_INDICES[3]) // Rain-man
 
-  // Should score Shikou (4 brights) instead of Sankou
+  // Should score Ame-shikou (4 brights) instead of Sankou
+  completed = checkBrightYaku(collection)
+  assertEquals(completed.length, 1)
+  console.debug(completed)
+  assertEquals(completed[0].name, "ame-shikou")
+  assertEquals(completed[0].points, 7)
+
+  // Replace Rain-man with Phoenix
+  collection.remove(BRIGHT_INDICES[3])
+  collection.add(BRIGHT_INDICES[4]) // Phoenix
+
+  // Should score Shikou (4 brights) instead of Sankou or Ame-shikou
   completed = checkBrightYaku(collection)
   assertEquals(completed.length, 1)
   assertEquals(completed[0].name, "shikou")
   assertEquals(completed[0].points, 8)
 
   // Add 5th bright
-  collection.add(BRIGHT_INDICES[4]) // Phoenix
+  collection.add(BRIGHT_INDICES[3]) // Rain-man
 
   // Should score Gokou (5 brights) instead of Shikou or Sankou
   completed = checkBrightYaku(collection)

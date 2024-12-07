@@ -3,36 +3,36 @@ import { CardType } from "../../core/cards.js"
 import { createCollection } from "../../core/collection.js"
 
 /**
- * @typedef {Object} AnimalRules
- * @property {boolean} [allowMultiple=true] Whether to allow scoring both Ino-Shika-Chou and Tane
- * @property {number} [extraPoints=1] Points for each additional animal beyond base requirement
- * @property {'ANIMAL_ONLY'|'CHAFF_ONLY'|'BOTH'} [sakeCupMode='ANIMAL_ONLY'] How to count the sake cup
+ * @typedef {import('./types.js').AnimalRules} AnimalRules
  */
 
 /**
  * Create a custom animal yaku checker with specific rules
- * @param {AnimalRules} rules
+ * @param {AnimalRules} [rules={}]
  */
 export const createAnimalChecker = (rules = {}) => {
   const { allowMultiple = true, extraPoints = 1, sakeCupMode = "ANIMAL_ONLY" } = rules
 
-  /**
-   * @param {import("../../core/collection.js").Collection} collection
-   * @returns {YakuResult[]}
-   */
   return (collection) => {
     const completed = []
+    const SAKE_CUP = 32 // Chrysanthemum Sake Cup
 
-    const effectiveCollection = createCollection({ cards: Array.from(collection) })
-    if (sakeCupMode === "CHAFF_ONLY") {
-      effectiveCollection.remove(32)
+    // Create a filtered collection that excludes sake cup in CHAFF_ONLY mode
+    let effectiveCollection = collection
+    if (sakeCupMode === "CHAFF_ONLY" && collection.has(SAKE_CUP)) {
+      effectiveCollection = createCollection()
+      for (const cardIndex of collection) {
+        if (cardIndex !== SAKE_CUP) {
+          effectiveCollection.add(cardIndex)
+        }
+      }
     }
-    // Calculate base animal count
-    let animalCount = effectiveCollection.findByType(CardType.ANIMAL).length
+
     // Check Ino-Shika-Chou first (higher points)
-    const inoShikaChouPoints = INO_SHIKA_CHOU.check(collection)
+    const inoShikaChouPoints = INO_SHIKA_CHOU.check(effectiveCollection)
     if (inoShikaChouPoints > 0) {
-      // Calculate extra points for additional animals beyond 3
+      // Calculate extra points for additional animals
+      const animalCount = effectiveCollection.findByType(CardType.ANIMAL).length
       const extraAnimalPoints = Math.max(0, animalCount - 3) * extraPoints
 
       completed.push({
@@ -43,9 +43,10 @@ export const createAnimalChecker = (rules = {}) => {
     }
 
     // Check Tane (Animals)
-    const basePoints = TANE.check(collection)
+    const basePoints = TANE.check(effectiveCollection)
     if (basePoints > 0) {
-      // Calculate extra points for additional animals beyond 5
+      // Calculate extra points for additional animals
+      const animalCount = effectiveCollection.findByType(CardType.ANIMAL).length
       const extraAnimalPoints = Math.max(0, animalCount - 5) * extraPoints
 
       completed.push({

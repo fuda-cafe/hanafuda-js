@@ -2,13 +2,12 @@ import { TSUKI_FUDA } from "../yaku/standard/month.js"
 import { getCard } from "../../core/cards.js"
 
 /**
- * @typedef {Object} MonthRules
- * @property {boolean} [allowMultipleMonths=false] Whether to allow scoring tsuki-fuda for multiple months
+ * @typedef {import('./types.js').MonthRules} MonthRules
  */
 
 /**
  * Create a custom month cards yaku checker with specific rules
- * @param {MonthRules} rules
+ * @param {MonthRules} [rules={}]
  */
 export const createMonthChecker = (rules = {}) => {
   const { allowMultipleMonths = false } = rules

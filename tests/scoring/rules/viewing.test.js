@@ -35,11 +35,12 @@ Deno.test("ViewingYaku - hanami-zake (flower viewing)", () => {
   collection.add(CHERRY_CURTAIN)
   viewingChecker = createViewingChecker({ weatherDependent: true })
   result = viewingChecker(collection, { weather: "rainy" })
-  assertEquals(result[0].points, 0, "Should cancel hanami in rainy weather")
+  assertEquals(result.length, 0, "Should not complete yaku in rainy weather")
 
   // Test with season bonus
   viewingChecker = createViewingChecker({ seasonDependent: true })
   result = viewingChecker(collection, { currentMonth: 3 })
+  assertEquals(result.length, 1, "Should complete yaku in season")
   assertEquals(result[0].points, 6, "Should double points during cherry blossom season")
 })
 
@@ -71,11 +72,12 @@ Deno.test("ViewingYaku - tsukimi-zake (moon viewing)", () => {
   collection.add(SUSUKI_MOON)
   viewingChecker = createViewingChecker({ weatherDependent: true })
   result = viewingChecker(collection, { weather: "foggy" })
-  assertEquals(result[0].points, 0, "Should cancel tsukimi in foggy weather")
+  assertEquals(result.length, 0, "Should not complete yaku in foggy weather")
 
   // Test with season bonus
   viewingChecker = createViewingChecker({ seasonDependent: true })
   result = viewingChecker(collection, { currentMonth: 8 })
+  assertEquals(result.length, 1, "Should complete yaku in season")
   assertEquals(result[0].points, 6, "Should double points during moon viewing season")
 })
 
@@ -94,4 +96,27 @@ Deno.test("ViewingYaku - multiple viewing yaku", () => {
     ["hanami-zake", "tsukimi-zake"],
     "Should include both viewing yaku"
   )
+})
+
+Deno.test("ViewingYaku - weather cancellation", () => {
+  const collection = createCollection()
+  const viewingChecker = createViewingChecker({ weatherDependent: true })
+
+  // Test Hanami cancellation
+  collection.addMany([CHERRY_CURTAIN, SAKE_CUP])
+  let result = viewingChecker(collection, { weather: "rainy" })
+  assertEquals(result.length, 0, "Hanami should be cancelled in rain")
+
+  // Test Tsukimi cancellation
+  collection.clear()
+  collection.addMany([SUSUKI_MOON, SAKE_CUP])
+  result = viewingChecker(collection, { weather: "foggy" })
+  assertEquals(result.length, 0, "Tsukimi should be cancelled in fog")
+
+  // Test selective cancellation
+  collection.clear()
+  collection.addMany([CHERRY_CURTAIN, SUSUKI_MOON, SAKE_CUP])
+  result = viewingChecker(collection, { weather: "rainy" })
+  assertEquals(result.length, 1, "Only Hanami should be cancelled in rain")
+  assertEquals(result[0].name, "tsukimi-zake", "Tsukimi should still be valid")
 })

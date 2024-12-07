@@ -27,7 +27,7 @@ export const AME_SHIKOU = defineYaku({
   description: ["Rain-man Four"],
   points: 7,
   pattern: {
-    cards: [{ type: CardType.BRIGHT, count: 4 }, { id: "willow-rain-man" }],
+    cards: [{ id: "willow-rain-man" }, { type: CardType.BRIGHT, count: 3 }],
   },
 })
 
