@@ -36,14 +36,14 @@ Deno.test("AnimalYaku - ino-shika-chou (boar-deer-butterfly)", () => {
   assertEquals(result[0].points, 6, "Should score extra point for additional animal")
 
   // Test with sake cup in different modes
-  animalChecker = createAnimalChecker({ sakeCupMode: "ANIMAL_ONLY" })
   collection.add(SAKE_CUP)
+  animalChecker = createAnimalChecker({ countSakeCup: true })
   result = animalChecker(collection)
-  assertEquals(result[0].points, 7, "Should count sake cup in ANIMAL_ONLY mode")
+  assertEquals(result[0].points, 7, "Should count sake cup with countSakeCup = true (default)")
 
-  animalChecker = createAnimalChecker({ sakeCupMode: "CHAFF_ONLY" })
+  animalChecker = createAnimalChecker({ countSakeCup: false })
   result = animalChecker(collection)
-  assertEquals(result[0].points, 6, "Should not count sake cup in CHAFF_ONLY mode")
+  assertEquals(result[0].points, 6, "Should not count sake cup with countSakeCup = false")
 })
 
 Deno.test("AnimalYaku - tane-zaku (animals)", () => {
@@ -64,12 +64,13 @@ Deno.test("AnimalYaku - tane-zaku (animals)", () => {
 
   // Test with sake cup
   collection.add(SAKE_CUP)
-  result = animalChecker(collection) // Default mode is ANIMAL_ONLY
-  assertEquals(result[0].points, 3, "Should count sake cup in ANIMAL_ONLY mode")
-
-  animalChecker = createAnimalChecker({ sakeCupMode: "CHAFF_ONLY" })
+  animalChecker = createAnimalChecker({ countSakeCup: true })
   result = animalChecker(collection)
-  assertEquals(result[0].points, 2, "Should not count sake cup in CHAFF_ONLY mode")
+  assertEquals(result[0].points, 3, "Should count sake cup with countSakeCup = true (default)")
+
+  animalChecker = createAnimalChecker({ countSakeCup: false })
+  result = animalChecker(collection)
+  assertEquals(result[0].points, 2, "Should not count sake cup with countSakeCup = false")
 
   // Test precedence with ino-shika-chou
   collection.clear()

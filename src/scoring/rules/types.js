@@ -1,42 +1,45 @@
 /**
- * @typedef {'ANIMAL_ONLY'|'CHAFF_ONLY'|'BOTH'} SakeCupMode
+ * @typedef {'NEVER'|'LIMITED'|'ALWAYS'} ViewingYakuMode
+ * NEVER: Viewing yaku are not recognized
+ * LIMITED: Viewing yaku require at least one other non-viewing yaku
+ * ALWAYS: Viewing yaku are always recognized (default)
  */
 
 /**
  * @typedef {Object} BrightRules
  * @property {boolean} [allowMultiple=false] Whether to allow scoring multiple bright yaku
- * @property {boolean} [requireRainMan=false] Whether Rain-man is required for 4-bright yaku
  */
 
 /**
  * @typedef {Object} AnimalRules
  * @property {boolean} [allowMultiple=true] Whether to allow scoring both Ino-Shika-Chou and Tane
- * @property {number} [extraPoints=1] Points for each additional animal beyond base requirement
- * @property {SakeCupMode} [sakeCupMode='ANIMAL_ONLY'] How to count the sake cup
+ * @property {number} [extraPoints=1] Points per additional animal
+ * @property {boolean} [countSakeCup=true] Whether to count sake cup as animal
  */
 
 /**
  * @typedef {Object} RibbonRules
  * @property {boolean} [allowMultiple=true] Whether to allow scoring multiple ribbon yaku
- * @property {number} [extraPoints=1] Points for each additional ribbon beyond 5
- * @property {boolean} [requireAllPoetry=false] Whether all poetry ribbons must be present
- * @property {boolean} [requireAllBlue=false] Whether all blue ribbons must be present
+ * @property {number} [extraPoints=1] Points per additional ribbon
  */
 
 /**
  * @typedef {Object} ViewingRules
+ * @property {ViewingYakuMode} [mode='ALWAYS'] How to recognize viewing yaku
  * @property {boolean} [weatherDependent=false] Whether viewing yaku are affected by weather
- * @property {boolean} [seasonDependent=false] Whether viewing yaku are affected by season
+ * @property {boolean} [seasonalBonus=false] Whether to award bonus points during appropriate seasons
+ * @property {boolean} [seasonalOnly=false] Whether to restrict yaku to their appropriate seasons
  */
 
 /**
  * @typedef {Object} ChaffRules
- * @property {number} [extraPoints=1] Points for each additional chaff beyond 10
+ * @property {number} [extraPoints=1] Points per additional chaff
+ * @property {boolean} [countSakeCup=false] Whether to count sake cup as chaff
  */
 
 /**
  * @typedef {Object} MonthRules
- * @property {boolean} [allowMultipleMonths=false] Whether to allow scoring tsuki-fuda for multiple months
+ * @property {boolean} [allowMultipleMonths=false] Whether to allow scoring multiple month sets
  */
 
 /**

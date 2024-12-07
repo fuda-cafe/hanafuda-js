@@ -35,10 +35,14 @@
  */
 
 /**
+ * @typedef {Array<{name: YakuName, points: number}>} YakuResults
+ */
+
+/**
  * @typedef {Object} YakuContext
  * @property {number} currentMonth Current month in the game (for tsuki-fuda yaku)
  * @property {RuleModifier[]} rules Rule modifiers
- * @property {Array<{name: YakuName, points: number}>} [completedYaku] List of already completed yaku
+ * @property {YakuResults} [completedYaku] List of already completed yaku
  * @property {import('../../core/collection.js').Collection} [tableCards] Cards on the table
  * @property {boolean} [checkTeyaku] Whether to check for hand yaku (teshi/kuttsuki)
  */
