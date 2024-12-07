@@ -41,76 +41,76 @@ const CARDS_LENGTH = 48
 /** @type {ReadonlyArray<[string, CardType, FlowerType, number]>} */
 const CARD_DATA = Object.freeze([
   // January - Pine (Matsu)
-  ["crane", CardType.BRIGHT, FlowerType.PINE, 1],
-  ["poetry-ribbon", CardType.RIBBON, FlowerType.PINE, 1],
-  ["chaff-1", CardType.CHAFF, FlowerType.PINE, 1],
-  ["chaff-2", CardType.CHAFF, FlowerType.PINE, 1],
+  ["crane", CardType.BRIGHT, FlowerType.PINE, 1], // 0
+  ["poetry-ribbon", CardType.RIBBON, FlowerType.PINE, 1], // 1
+  ["chaff-1", CardType.CHAFF, FlowerType.PINE, 1], // 2
+  ["chaff-2", CardType.CHAFF, FlowerType.PINE, 1], // 3
 
   // February - Plum (Ume)
-  ["bush-warbler", CardType.ANIMAL, FlowerType.PLUM, 2],
-  ["poetry-ribbon", CardType.RIBBON, FlowerType.PLUM, 2],
-  ["chaff-1", CardType.CHAFF, FlowerType.PLUM, 2],
-  ["chaff-2", CardType.CHAFF, FlowerType.PLUM, 2],
+  ["bush-warbler", CardType.ANIMAL, FlowerType.PLUM, 2], // 4
+  ["poetry-ribbon", CardType.RIBBON, FlowerType.PLUM, 2], // 5
+  ["chaff-1", CardType.CHAFF, FlowerType.PLUM, 2], // 6
+  ["chaff-2", CardType.CHAFF, FlowerType.PLUM, 2], // 7
 
   // March - Cherry (Sakura)
-  ["curtain", CardType.BRIGHT, FlowerType.CHERRY, 3],
-  ["poetry-ribbon", CardType.RIBBON, FlowerType.CHERRY, 3],
-  ["chaff-1", CardType.CHAFF, FlowerType.CHERRY, 3],
-  ["chaff-2", CardType.CHAFF, FlowerType.CHERRY, 3],
+  ["curtain", CardType.BRIGHT, FlowerType.CHERRY, 3], // 8
+  ["poetry-ribbon", CardType.RIBBON, FlowerType.CHERRY, 3], // 9
+  ["chaff-1", CardType.CHAFF, FlowerType.CHERRY, 3], // 10
+  ["chaff-2", CardType.CHAFF, FlowerType.CHERRY, 3], // 11
 
   // April - Wisteria (Fuji)
-  ["cuckoo", CardType.ANIMAL, FlowerType.WISTERIA, 4],
-  ["red-ribbon", CardType.RIBBON, FlowerType.WISTERIA, 4],
-  ["chaff-1", CardType.CHAFF, FlowerType.WISTERIA, 4],
-  ["chaff-2", CardType.CHAFF, FlowerType.WISTERIA, 4],
+  ["cuckoo", CardType.ANIMAL, FlowerType.WISTERIA, 4], // 12
+  ["red-ribbon", CardType.RIBBON, FlowerType.WISTERIA, 4], // 13
+  ["chaff-1", CardType.CHAFF, FlowerType.WISTERIA, 4], // 14
+  ["chaff-2", CardType.CHAFF, FlowerType.WISTERIA, 4], // 15
 
   // May - Iris (Ayame)
-  ["bridge", CardType.ANIMAL, FlowerType.IRIS, 5],
-  ["red-ribbon", CardType.RIBBON, FlowerType.IRIS, 5],
-  ["chaff-1", CardType.CHAFF, FlowerType.IRIS, 5],
-  ["chaff-2", CardType.CHAFF, FlowerType.IRIS, 5],
+  ["bridge", CardType.ANIMAL, FlowerType.IRIS, 5], // 16
+  ["red-ribbon", CardType.RIBBON, FlowerType.IRIS, 5], // 17
+  ["chaff-1", CardType.CHAFF, FlowerType.IRIS, 5], // 18
+  ["chaff-2", CardType.CHAFF, FlowerType.IRIS, 5], // 19
 
   // June - Peony (Botan)
-  ["butterfly", CardType.ANIMAL, FlowerType.PEONY, 6],
-  ["blue-ribbon", CardType.RIBBON, FlowerType.PEONY, 6],
-  ["chaff-1", CardType.CHAFF, FlowerType.PEONY, 6],
-  ["chaff-2", CardType.CHAFF, FlowerType.PEONY, 6],
+  ["butterfly", CardType.ANIMAL, FlowerType.PEONY, 6], // 20
+  ["blue-ribbon", CardType.RIBBON, FlowerType.PEONY, 6], // 21
+  ["chaff-1", CardType.CHAFF, FlowerType.PEONY, 6], // 22
+  ["chaff-2", CardType.CHAFF, FlowerType.PEONY, 6], // 23
 
   // July - Bush Clover (Hagi)
-  ["boar", CardType.ANIMAL, FlowerType.BUSH_CLOVER, 7],
-  ["red-ribbon", CardType.RIBBON, FlowerType.BUSH_CLOVER, 7],
-  ["chaff-1", CardType.CHAFF, FlowerType.BUSH_CLOVER, 7],
-  ["chaff-2", CardType.CHAFF, FlowerType.BUSH_CLOVER, 7],
+  ["boar", CardType.ANIMAL, FlowerType.BUSH_CLOVER, 7], // 24
+  ["red-ribbon", CardType.RIBBON, FlowerType.BUSH_CLOVER, 7], // 25
+  ["chaff-1", CardType.CHAFF, FlowerType.BUSH_CLOVER, 7], // 26
+  ["chaff-2", CardType.CHAFF, FlowerType.BUSH_CLOVER, 7], // 27
 
   // August - Susuki Grass
-  ["moon", CardType.BRIGHT, FlowerType.SUSUKI, 8],
-  ["geese", CardType.ANIMAL, FlowerType.SUSUKI, 8],
-  ["chaff-1", CardType.CHAFF, FlowerType.SUSUKI, 8],
-  ["chaff-2", CardType.CHAFF, FlowerType.SUSUKI, 8],
+  ["moon", CardType.BRIGHT, FlowerType.SUSUKI, 8], // 28
+  ["geese", CardType.ANIMAL, FlowerType.SUSUKI, 8], // 29
+  ["chaff-1", CardType.CHAFF, FlowerType.SUSUKI, 8], // 30
+  ["chaff-2", CardType.CHAFF, FlowerType.SUSUKI, 8], // 31
 
   // September - Chrysanthemum (Kiku)
-  ["sake-cup", CardType.ANIMAL, FlowerType.CHRYSANTHEMUM, 9],
-  ["blue-ribbon", CardType.RIBBON, FlowerType.CHRYSANTHEMUM, 9],
-  ["chaff-1", CardType.CHAFF, FlowerType.CHRYSANTHEMUM, 9],
-  ["chaff-2", CardType.CHAFF, FlowerType.CHRYSANTHEMUM, 9],
+  ["sake-cup", CardType.ANIMAL, FlowerType.CHRYSANTHEMUM, 9], // 32
+  ["blue-ribbon", CardType.RIBBON, FlowerType.CHRYSANTHEMUM, 9], // 33
+  ["chaff-1", CardType.CHAFF, FlowerType.CHRYSANTHEMUM, 9], // 34
+  ["chaff-2", CardType.CHAFF, FlowerType.CHRYSANTHEMUM, 9], // 35
 
   // October - Maple (Momiji)
-  ["deer", CardType.ANIMAL, FlowerType.MAPLE, 10],
-  ["blue-ribbon", CardType.RIBBON, FlowerType.MAPLE, 10],
-  ["chaff-1", CardType.CHAFF, FlowerType.MAPLE, 10],
-  ["chaff-2", CardType.CHAFF, FlowerType.MAPLE, 10],
+  ["deer", CardType.ANIMAL, FlowerType.MAPLE, 10], // 36
+  ["blue-ribbon", CardType.RIBBON, FlowerType.MAPLE, 10], // 37
+  ["chaff-1", CardType.CHAFF, FlowerType.MAPLE, 10], // 38
+  ["chaff-2", CardType.CHAFF, FlowerType.MAPLE, 10], // 39
 
   // November - Willow (Yanagi)
-  ["rain-man", CardType.BRIGHT, FlowerType.WILLOW, 11],
-  ["swallow", CardType.ANIMAL, FlowerType.WILLOW, 11],
-  ["red-ribbon", CardType.RIBBON, FlowerType.WILLOW, 11],
-  ["chaff", CardType.CHAFF, FlowerType.WILLOW, 11],
+  ["rain-man", CardType.BRIGHT, FlowerType.WILLOW, 11], // 40
+  ["swallow", CardType.ANIMAL, FlowerType.WILLOW, 11], // 41
+  ["red-ribbon", CardType.RIBBON, FlowerType.WILLOW, 11], // 42
+  ["chaff", CardType.CHAFF, FlowerType.WILLOW, 11], // 43
 
   // December - Paulownia (Kiri)
-  ["phoenix", CardType.BRIGHT, FlowerType.PAULOWNIA, 12],
-  ["chaff-1", CardType.CHAFF, FlowerType.PAULOWNIA, 12],
-  ["chaff-2", CardType.CHAFF, FlowerType.PAULOWNIA, 12],
-  ["chaff-3", CardType.CHAFF, FlowerType.PAULOWNIA, 12],
+  ["phoenix", CardType.BRIGHT, FlowerType.PAULOWNIA, 12], // 44
+  ["chaff-1", CardType.CHAFF, FlowerType.PAULOWNIA, 12], // 45
+  ["chaff-2", CardType.CHAFF, FlowerType.PAULOWNIA, 12], // 46
+  ["chaff-3", CardType.CHAFF, FlowerType.PAULOWNIA, 12], // 47
 ])
 
 /** @type {ReadonlyArray<Card>} */
