@@ -30,14 +30,11 @@ export const createBrightChecker = (rules = {}) => {
     const completed = []
 
     for (const yaku of BRIGHT_PRECEDENCE) {
-      console.debug(`Checking ${yaku.name} with ${collection.size()} cards`)
       let effectiveCollection = collection
       if (yaku === SHIKOU) {
         effectiveCollection = createCollection({ cards: Array.from(collection) })
         effectiveCollection.remove(RAIN_MAN) // Remove Rain-man
-        console.debug("Removed Rain-man")
       }
-      console.debug({ effectiveCollection: Array.from(effectiveCollection) })
       const points = yaku.check(effectiveCollection)
       if (points > 0) {
         completed.push({ name: yaku.name, points })
