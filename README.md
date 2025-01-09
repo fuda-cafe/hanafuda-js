@@ -173,3 +173,43 @@ const testDeck = new Deck({
 ## License
 
 [Add your chosen license here]
+
+## Running the Example Web App
+
+The project includes a simple web app demonstrating the Hanafuda library's functionality. To run it:
+
+1. Make sure you have Deno installed (https://deno.com/)
+
+2. Start the server:
+
+   ```bash
+   deno run --allow-net --allow-read main.js
+   ```
+
+3. Open your browser and navigate to:
+   ```
+   http://localhost:8000/example/
+   ```
+
+The example web app demonstrates:
+
+- Game state management
+- Card dealing and display
+- Saving/loading game state
+- Basic game interface
+
+For more details, see the [Example Documentation](src/example/README.md).
+
+## Project Structure
+
+```
+hanafuda/
+├── src/
+│   ├── core/           # Core game mechanics
+│   ├── game/           # Game state management
+│   ├── scoring/        # Yaku scoring system
+│   └── example/        # Web app example
+├── tests/              # Test suites
+├── main.js            # Deno server
+└── README.md
+```

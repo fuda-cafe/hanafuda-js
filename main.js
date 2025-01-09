@@ -1,18 +1,18 @@
-import Deck from "./src/deck.js"
-import { GameState } from "./src/game.js"
-import { GameLoop, PlayerChoice } from "./src/gameLoop.js"
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
+import { serveDir } from "https://deno.land/std@0.208.0/http/file_server.ts"
 
-// Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
-if (import.meta.main) {
-  const gameState = new GameState()
-  const gameLoop = new GameLoop(gameState)
+const port = 8000
+const handler = async (req) => {
+  // Serve static files from the src directory
+  const response = await serveDir(req, {
+    fsRoot: "src",
+    urlRoot: "",
+    showDirListing: true,
+    enableCors: true,
+  })
 
-  // Start a new round
-  gameLoop.startRound()
-
-  // Handle player turns
-  gameLoop.playTurn(cardIndex, matchingCards)
-
-  // Handle koi-koi choices
-  gameLoop.makeChoice(PlayerChoice.KOI_KOI)
+  return response
 }
+
+console.log(`HTTP server running at http://localhost:${port}/example/`)
+await serve(handler, { port })
