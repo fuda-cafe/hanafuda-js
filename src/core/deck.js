@@ -72,7 +72,7 @@ export const createDeck = (options = {}) => {
      * Check if deck is empty
      * @returns {boolean}
      */
-    isEmpty() {
+    get isEmpty() {
       return cardArray.length === 0
     },
 
@@ -80,7 +80,7 @@ export const createDeck = (options = {}) => {
      * Get number of remaining cards
      * @returns {number}
      */
-    size() {
+    get size() {
       return cardArray.length
     },
   })
