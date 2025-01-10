@@ -1,6 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert"
 import { isMatch, compareCards, hasMatch } from "../../src/core/matching.js"
-import { CardType } from "../../src/core/cards.js"
 
 Deno.test("Card Matching", () => {
   // Test matching cards from the same month

@@ -1,7 +1,7 @@
 import { getCard, isValidCardIndex } from "./cards.js"
 
 /**
- * @typedef {import('./types.js').Card} Card
+ * @typedef {import('./cards.js').Card} Card
  */
 
 /**

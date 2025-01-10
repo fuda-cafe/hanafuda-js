@@ -1,5 +1,5 @@
 /**
- * @typedef {import('./types.js').Card} Card
+ * @typedef {import('./cards.js').Card} Card
  */
 
 /**
