@@ -35,9 +35,14 @@ const validateRuleConfig = (config) => {
 }
 
 /**
+ * @typedef {Object} ScoringManager
+ * @property {(collection: import('../core/collection.js').Collection, context?: ScoringContext) => YakuResult[]} score - Score a collection of cards
+ */
+
+/**
  * Create a scoring manager with the given rule configuration
  * @param {RuleConfig} [config={}] Rule configuration
- * @returns {(collection: import('../core/collection.js').Collection, context?: ScoringContext) => YakuResult[]}
+ * @returns {ScoringManager}
  */
 export const createScoringManager = (config = {}) => {
   // Validate rule configuration
