@@ -73,6 +73,53 @@ Deno.test("Draw Multiple Cards", () => {
   assertEquals(deck.isEmpty, true)
 })
 
+Deno.test("Place Card on Top of Deck", () => {
+  const deck = createDeck({ cards: [7, 8, 9, 10] })
+  const initialSize = deck.size
+  const cardToPlace = 47
+
+  deck.placeOnTop(cardToPlace)
+  assertEquals(deck.size, initialSize + 1)
+  assertEquals(deck.cards[deck.size - 1], cardToPlace) // Check if card is on top
+
+  // Attempt to place the same card again
+  deck.placeOnTop(cardToPlace)
+  // Size should remain the same after attempting to add duplicate
+  assertEquals(deck.size, initialSize + 1)
+  // Card should still be on top
+  assertEquals(deck.cards[deck.size - 1], cardToPlace)
+})
+
+Deno.test("Place Card on Bottom of Deck", () => {
+  const deck = createDeck({ cards: [7, 8, 9, 10] })
+  const initialSize = deck.size
+  const cardToPlace = 47
+
+  deck.placeOnBottom(cardToPlace)
+  assertEquals(deck.size, initialSize + 1)
+  assertEquals(deck.cards[0], cardToPlace) // Check if card is at the bottom
+
+  // Attempt to place the same card again
+  deck.placeOnBottom(cardToPlace)
+  // Size should remain the same after attempting to add duplicate
+  assertEquals(deck.size, initialSize + 1)
+  // Card should still be at the bottom
+  assertEquals(deck.cards[0], cardToPlace)
+})
+
+Deno.test("Deck Reshuffling", () => {
+  const deck = createDeck({ cards: [1, 2, 3, 4, 5], shuffled: false })
+  const originalOrder = [...deck.cards]
+
+  deck.reshuffle()
+
+  // After reshuffling, the cards should be the same but in a different order
+  const newOrder = deck.cards
+  assertEquals(new Set(originalOrder), new Set(newOrder))
+  // Note: There's a tiny chance this could fail if the shuffle happens to produce the same order
+  assertNotEquals(originalOrder, newOrder)
+})
+
 Deno.test("Deck Immutability", () => {
   const deck = createStandardDeck()
   const initialSize = deck.size

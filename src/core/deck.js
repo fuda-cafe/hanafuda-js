@@ -2,6 +2,8 @@
  * @typedef {import('./cards.js').Card} Card
  */
 
+import { isValidCardIndex } from "./cards.js"
+
 /**
  * Fisher-Yates shuffle algorithm
  * @template T
@@ -36,7 +38,30 @@ const shuffle = (array) => {
 export const createDeck = (options = {}) => {
   const { shuffled = true, cards = Array.from({ length: 48 }, (_, i) => i) } = options
 
+  /**
+   * cardArray
+   * @private
+   * @type {Array<number>}
+   */
   let cardArray = shuffled ? shuffle(cards) : [...cards]
+
+  /**
+   * isValidPlacement
+   * @private
+   * @param {number} cardIndex
+   * @returns {boolean}
+   */
+  const isValidPlacement = (cardIndex) => {
+    if (!isValidCardIndex(cardIndex)) {
+      console.warn(`Invalid card index: ${cardIndex}`)
+      return false
+    }
+    if (cardArray.includes(cardIndex)) {
+      console.warn(`Card ${cardIndex} already in deck`)
+      return false
+    }
+    return true
+  }
 
   return Object.freeze({
     /**
@@ -69,6 +94,33 @@ export const createDeck = (options = {}) => {
     },
 
     /**
+     * Add a card to the deck
+     * @param {number} cardIndex
+     */
+    placeOnTop(cardIndex) {
+      if (isValidPlacement(cardIndex)) {
+        cardArray.push(cardIndex)
+      }
+    },
+
+    /**
+     * Add a card to the deck
+     * @param {number} cardIndex
+     */
+    placeOnBottom(cardIndex) {
+      if (isValidPlacement(cardIndex)) {
+        cardArray.unshift(cardIndex)
+      }
+    },
+
+    /**
+     * Reshuffle current deck
+     */
+    reshuffle() {
+      cardArray = shuffle(cardArray)
+    },
+
+    /**
      * Check if deck is empty
      * @returns {boolean}
      */
@@ -82,6 +134,13 @@ export const createDeck = (options = {}) => {
      */
     get size() {
       return cardArray.length
+    },
+
+    /**
+     * Reset deck to initial state
+     */
+    reset() {
+      cardArray = shuffled ? shuffle(cards) : [...cards]
     },
   })
 }
