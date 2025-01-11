@@ -64,7 +64,7 @@ export const defineYaku = (definition) => {
         (sum, pattern) => sum + (pattern.count || 1),
         0
       )
-      if (collection.size() < minRequired) return 0
+      if (collection.size < minRequired) return 0
 
       // Check each card pattern
       for (const pattern of definition.pattern.cards) {

@@ -24,8 +24,9 @@ const shuffle = (array) => {
  * @property {Array<number>} cards Array of card indices
  * @property {() => number|null} draw Draw a card from the deck
  * @property {() => Array<number>} drawMany Draw multiple cards from the deck
- * @property {() => boolean} isEmpty Check if deck is empty
- * @property {() => number} size Get number of remaining cards
+ * @property {boolean} isEmpty Check if deck is empty
+ * @property {number} size Get number of remaining cards
+ * @property {() => void} reset Reset deck to initial state
  */
 
 /**
@@ -33,37 +34,63 @@ const shuffle = (array) => {
  * @param {Object} [options]
  * @param {boolean} [options.shuffled=true] Whether to shuffle the deck
  * @param {Array<number>} [options.cards] Initial cards (indices) to use
+ * @param {string} [options.fromJSON] JSON string to initialize from
  * @returns {Readonly<Deck>}
+ * @throws {Error} If any card index is invalid
+ * @throws {Error} If JSON string is invalid
  */
 export const createDeck = (options = {}) => {
-  const { shuffled = true, cards = Array.from({ length: 48 }, (_, i) => i) } = options
+  const { shuffled = true, cards = Array.from({ length: 48 }, (_, i) => i), fromJSON } = options
+
+  // If JSON string provided, parse it and use those cards
+  const initialCards = fromJSON ? JSON.parse(fromJSON) : cards
+
+  // If cards are not an array, throw an error
+  if (!Array.isArray(initialCards)) {
+    throw new Error(`Invalid cards array from JSON: ${initialCards}`)
+  }
+
+  // Validate initial cards
+  initialCards.forEach((index, i) => {
+    if (!isValidCardIndex(index)) {
+      throw new Error(`Invalid card index at position ${i}: ${index}`)
+    }
+  })
 
   /**
    * cardArray
    * @private
    * @type {Array<number>}
    */
-  let cardArray = shuffled ? shuffle(cards) : [...cards]
+  let cardArray = shuffled ? shuffle(initialCards) : [...initialCards]
 
   /**
    * isValidPlacement
    * @private
    * @param {number} cardIndex
    * @returns {boolean}
+   * @throws {Error} If card index is invalid
+   * @throws {Error} If card is already in deck
    */
   const isValidPlacement = (cardIndex) => {
     if (!isValidCardIndex(cardIndex)) {
-      console.warn(`Invalid card index: ${cardIndex}`)
-      return false
+      throw new Error(`Invalid card index: ${cardIndex}`)
     }
     if (cardArray.includes(cardIndex)) {
-      console.warn(`Card ${cardIndex} already in deck`)
-      return false
+      throw new Error(`Card ${cardIndex} already in deck`)
     }
     return true
   }
 
   return Object.freeze({
+    /**
+     * Make deck iterable
+     * @returns {Iterator<number>}
+     */
+    [Symbol.iterator]() {
+      return cardArray[Symbol.iterator]()
+    },
+
     /**
      * Current cards in deck
      * @returns {Array<number>}
@@ -141,6 +168,30 @@ export const createDeck = (options = {}) => {
      */
     reset() {
       cardArray = shuffled ? shuffle(cards) : [...cards]
+    },
+
+    /**
+     * Get string representation of deck
+     * @returns {string}
+     */
+    toString() {
+      return `Deck(${cardArray.join(", ")})`
+    },
+
+    /**
+     * Custom inspection for console.log
+     * @returns {string}
+     */
+    [Symbol.for("nodejs.util.inspect.custom")]() {
+      return this.toString()
+    },
+
+    /**
+     * Get JSON representation of deck
+     * @returns {string}
+     */
+    toJSON() {
+      return this.cards
     },
   })
 }

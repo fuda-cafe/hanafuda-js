@@ -5,12 +5,18 @@ import { getCard } from "../../core/cards.js"
  * Create a hand yaku checker
  */
 export const createHandChecker = () => {
+  /**
+   * Check hand yaku
+   * @param {import('../../core/types.js').Collection} collection
+   * @param {object} context
+   * @returns {Array<{name: string, points: number}>}
+   */
   return (collection, context = null) => {
     // Only check hand yaku if explicitly requested via context
     if (!context?.checkTeyaku) return []
 
     // Verify we have exactly 8 cards (initial hand size)
-    if (collection.size() !== 8) return []
+    if (collection.size !== 8) return []
 
     // Count cards by month
     const monthCounts = new Map()

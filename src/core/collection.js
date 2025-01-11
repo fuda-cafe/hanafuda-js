@@ -20,7 +20,7 @@ import { getCard, isValidCardIndex } from "./cards.js"
  * @property {(cards: Array<number>) => number} addMany Add multiple cards to collection
  * @property {(card: number) => boolean} remove Remove card from collection
  * @property {(cards: Array<number>) => number} removeMany Remove multiple cards from collection
- * @property {() => number} size Get collection size
+ * @property {number} size Get collection size
  * @property {() => void} clear Clear all cards
  * @property {() => Iterator<number>} [Symbol.iterator] Iterator implementation
  */
@@ -29,18 +29,25 @@ import { getCard, isValidCardIndex } from "./cards.js"
  * Create a new card collection
  * @param {Object} [options]
  * @param {Array<number>} [options.cards=[]] Initial cards (indices)
+ * @param {string} [options.fromJSON] JSON string to initialize from
  * @returns {Readonly<Collection>}
  * @throws {Error} If any card index is invalid
  */
 export const createCollection = (options = {}) => {
-  const { cards = [] } = options
+  const { cards = [], fromJSON } = options
+
+  // If JSON string provided, parse it and use those cards
+  const initialCards = fromJSON ? JSON.parse(fromJSON) : cards
+
   // Validate initial cards
-  cards.forEach((index, i) => {
+  initialCards.forEach((index, i) => {
     if (!isValidCardIndex(index)) {
       throw new Error(`Invalid card index at position ${i}: ${index}`)
     }
   })
-  const cardSet = new Set(cards)
+
+  // Create the collection
+  const cardSet = new Set(initialCards)
 
   return Object.freeze({
     /**
@@ -140,7 +147,7 @@ export const createCollection = (options = {}) => {
      * Get collection size
      * @returns {number}
      */
-    size() {
+    get size() {
       return cardSet.size
     },
 
@@ -149,6 +156,30 @@ export const createCollection = (options = {}) => {
      */
     clear() {
       cardSet.clear()
+    },
+
+    /**
+     * Get JSON representation of collection
+     * @returns {Array<number>}
+     */
+    toJSON() {
+      return Array.from(this)
+    },
+
+    /**
+     * Get string representation of collection
+     * @returns {string}
+     */
+    toString() {
+      return `Collection(${Array.from(this).join(", ")})`
+    },
+
+    /**
+     * Custom inspection for console.log
+     * @returns {string}
+     */
+    [Symbol.for("nodejs.util.inspect.custom")]() {
+      return this.toString()
     },
   })
 }

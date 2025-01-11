@@ -3,14 +3,14 @@ import { createCollection } from "../core/collection.js"
 
 /**
  * @typedef {Object} PlayerState
- * @property {import('../core/collection.js').Collection} hand - Cards in player's hand
- * @property {import('../core/collection.js').Collection} captured - Cards captured by player
+ * @property {import('../core/types.js').Collection} hand - Cards in player's hand
+ * @property {import('../core/types.js').Collection} captured - Cards captured by player
  */
 
 /**
  * @typedef {Object} GameState
- * @property {number[]} deck - Cards remaining in deck
- * @property {import('../core/collection.js').Collection} field - Cards on the field
+ * @property {import('../core/types.js').Deck} deck - Cards remaining in deck
+ * @property {import('../core/types.js').Collection} field - Cards on the field
  * @property {Object.<string, PlayerState>} players - Map of player ID to their state
  * @property {string} currentPlayer - ID of active player
  * @property {number} currentMonth - Current month (1-12)
@@ -39,7 +39,7 @@ export function createGameState(playerIds, options = {}) {
   }
 
   return {
-    deck: createDeck().cards,
+    deck: createDeck(),
     field: createCollection(),
     players,
     currentPlayer: null, // Will be set by determineFirstPlayer

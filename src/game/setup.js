@@ -13,12 +13,12 @@ export function determineFirstPlayer(state) {
   const draws = {}
 
   for (const playerId of Object.keys(state.players)) {
-    const cardIndex = state.deck.pop()
+    const cardIndex = state.deck.draw()
     const card = getCard(cardIndex)
     draws[playerId] = card.month
 
     // Return card to deck
-    state.deck.unshift(cardIndex)
+    state.deck.placeOnBottom(cardIndex)
   }
 
   // Find player with earliest month
@@ -33,12 +33,12 @@ export function determineFirstPlayer(state) {
 export function dealInitialCards(state) {
   // Deal 8 cards to each player
   for (const playerId of Object.keys(state.players)) {
-    const hand = state.deck.splice(0, 8)
+    const hand = state.deck.drawMany(8)
     state.players[playerId].hand.addMany(hand)
   }
 
   // Deal 8 cards to field
-  const fieldCards = state.deck.splice(0, 8)
+  const fieldCards = state.deck.drawMany(8)
   state.field.addMany(fieldCards)
 
   return state

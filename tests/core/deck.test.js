@@ -1,4 +1,4 @@
-import { assertEquals, assertNotEquals } from "@std/assert"
+import { assertEquals, assertNotEquals, assertThrows, assert } from "@std/assert"
 import { createDeck, createStandardDeck } from "../../src/core/deck.js"
 
 Deno.test("Create Empty Deck", () => {
@@ -22,16 +22,35 @@ Deno.test("Create Standard Deck", () => {
 })
 
 Deno.test("Deck Shuffling", () => {
-  const deck1 = createStandardDeck()
-  const deck2 = createStandardDeck()
-
-  // Two shuffled decks should (very likely) be different
-  assertNotEquals(deck1.cards, deck2.cards)
-
-  // Unshuffled decks should be in order
+  // Test both initial shuffle and reshuffle
   const orderedDeck = createDeck({ shuffled: false })
+  const originalOrder = [...orderedDeck.cards]
+
+  let differentOrderCount = 0
+  const iterations = 100
+
+  for (let i = 0; i < iterations; i++) {
+    orderedDeck.reshuffle()
+
+    // Verify all cards are still present
+    assertEquals(orderedDeck.size, 48)
+    assertEquals(new Set(orderedDeck.cards), new Set(Array.from({ length: 48 }, (_, i) => i)))
+
+    // Count if order is different from original
+    if (orderedDeck.cards.some((card, index) => card !== originalOrder[index])) {
+      differentOrderCount++
+    }
+  }
+
+  assert(
+    differentOrderCount > 98,
+    `Shuffle produced too many identical orders: ${differentOrderCount} different out of ${iterations}`
+  )
+
+  // Test that unshuffled decks are in order
+  const newOrderedDeck = createDeck({ shuffled: false })
   assertEquals(
-    orderedDeck.cards,
+    newOrderedDeck.cards,
     Array.from({ length: 48 }, (_, i) => i)
   )
 })
@@ -83,7 +102,7 @@ Deno.test("Place Card on Top of Deck", () => {
   assertEquals(deck.cards[deck.size - 1], cardToPlace) // Check if card is on top
 
   // Attempt to place the same card again
-  deck.placeOnTop(cardToPlace)
+  assertThrows(() => deck.placeOnTop(cardToPlace), Error, `Card ${cardToPlace} already in deck`)
   // Size should remain the same after attempting to add duplicate
   assertEquals(deck.size, initialSize + 1)
   // Card should still be on top
@@ -100,24 +119,11 @@ Deno.test("Place Card on Bottom of Deck", () => {
   assertEquals(deck.cards[0], cardToPlace) // Check if card is at the bottom
 
   // Attempt to place the same card again
-  deck.placeOnBottom(cardToPlace)
+  assertThrows(() => deck.placeOnBottom(cardToPlace), Error, `Card ${cardToPlace} already in deck`)
   // Size should remain the same after attempting to add duplicate
   assertEquals(deck.size, initialSize + 1)
   // Card should still be at the bottom
   assertEquals(deck.cards[0], cardToPlace)
-})
-
-Deno.test("Deck Reshuffling", () => {
-  const deck = createDeck({ cards: [1, 2, 3, 4, 5], shuffled: false })
-  const originalOrder = [...deck.cards]
-
-  deck.reshuffle()
-
-  // After reshuffling, the cards should be the same but in a different order
-  const newOrder = deck.cards
-  assertEquals(new Set(originalOrder), new Set(newOrder))
-  // Note: There's a tiny chance this could fail if the shuffle happens to produce the same order
-  assertNotEquals(originalOrder, newOrder)
 })
 
 Deno.test("Deck Immutability", () => {
@@ -133,4 +139,60 @@ Deno.test("Deck Immutability", () => {
   // Drawing shouldn't affect previously returned cards array
   deck.draw()
   assertEquals(cards.length + 1, initialSize)
+})
+
+Deno.test("Deck String Representation", () => {
+  const deck = createDeck({
+    cards: [0, 1, 2],
+    shuffled: false,
+  })
+
+  // Test toString method
+  assertEquals(deck.toString(), "Deck(0, 1, 2)")
+
+  // Test empty deck
+  const emptyDeck = createDeck({ cards: [] })
+  assertEquals(emptyDeck.toString(), "Deck()")
+})
+
+Deno.test("Deck JSON Serialization", () => {
+  const original = createDeck({
+    cards: [0, 1, 2],
+    shuffled: false,
+  })
+
+  // Test toJSON method - returns array directly
+  assertEquals(original.toJSON(), [0, 1, 2])
+
+  // Test JSON.stringify integration - returns string
+  const json = JSON.stringify(original)
+  assertEquals(json, "[0,1,2]")
+
+  // Test empty deck
+  const empty = createDeck({ cards: [] })
+  assertEquals(JSON.stringify(empty), "[]")
+})
+
+Deno.test("Deck JSON Deserialization", () => {
+  const original = createDeck({
+    cards: [0, 1, 2],
+    shuffled: false,
+  })
+  const json = JSON.stringify(original)
+
+  // Test creating from JSON string
+  const restored = createDeck({ fromJSON: json, shuffled: false })
+  assertEquals(restored.size, 3)
+  assertEquals(restored.cards, [0, 1, 2])
+
+  // Test with empty deck
+  const emptyJson = "[]"
+  const emptyRestored = createDeck({ fromJSON: emptyJson })
+  assertEquals(emptyRestored.size, 0)
+
+  // Test invalid JSON
+  assertThrows(() => createDeck({ fromJSON: "invalid json" }), Error, "Unexpected token")
+
+  // Test invalid card indices in JSON
+  assertThrows(() => createDeck({ fromJSON: "[-1]" }), Error, "Invalid card index")
 })

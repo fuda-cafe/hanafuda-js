@@ -4,14 +4,14 @@ import { CardType } from "../../src/core/cards.js"
 
 Deno.test("Create Empty Collection", () => {
   const collection = createCollection()
-  assertEquals(collection.size(), 0)
+  assertEquals(collection.size, 0)
   assertEquals(Array.from(collection), [])
 })
 
 Deno.test("Create Collection with Initial Cards", () => {
   const cards = [0, 1, 2]
   const collection = createCollection({ cards })
-  assertEquals(collection.size(), 3)
+  assertEquals(collection.size, 3)
   assertEquals(Array.from(collection), cards)
 })
 
@@ -20,21 +20,21 @@ Deno.test("Add Cards", () => {
 
   // Single card
   assertEquals(collection.add(0), true)
-  assertEquals(collection.size(), 1)
+  assertEquals(collection.size, 1)
 
   // Duplicate card
   assertEquals(collection.add(0), false)
-  assertEquals(collection.size(), 1)
+  assertEquals(collection.size, 1)
 
   // Multiple cards
   const added = collection.addMany([1, 2, 3])
   assertEquals(added, 3)
-  assertEquals(collection.size(), 4)
+  assertEquals(collection.size, 4)
 
   // Multiple cards with duplicates
   const addedWithDups = collection.addMany([2, 3, 4])
   assertEquals(addedWithDups, 1)
-  assertEquals(collection.size(), 5)
+  assertEquals(collection.size, 5)
 })
 
 Deno.test("Remove Cards", () => {
@@ -42,21 +42,21 @@ Deno.test("Remove Cards", () => {
 
   // Single card
   assertEquals(collection.remove(0), true)
-  assertEquals(collection.size(), 3)
+  assertEquals(collection.size, 3)
 
   // Non-existent card
   assertEquals(collection.remove(0), false)
-  assertEquals(collection.size(), 3)
+  assertEquals(collection.size, 3)
 
   // Multiple cards
   const removed = collection.removeMany([1, 2])
   assertEquals(removed, 2)
-  assertEquals(collection.size(), 1)
+  assertEquals(collection.size, 1)
 
   // Multiple cards with non-existent ones
   const removedNonExistent = collection.removeMany([1, 2, 3, 4])
   assertEquals(removedNonExistent, 1)
-  assertEquals(collection.size(), 0)
+  assertEquals(collection.size, 0)
 })
 
 Deno.test("Find Cards", () => {
@@ -99,7 +99,7 @@ Deno.test("Collection Operations", () => {
 
   // Clear
   collection.clear()
-  assertEquals(collection.size(), 0)
+  assertEquals(collection.size, 0)
   assertEquals(collection.has(0), false)
 })
 
@@ -109,7 +109,7 @@ Deno.test("Collection Immutability", () => {
 
   // Modifying returned array shouldn't affect collection
   array.pop()
-  assertEquals(collection.size(), 3)
+  assertEquals(collection.size, 3)
   assertEquals(Array.from(collection).length, 3)
 
   // Collection methods should return new arrays
@@ -134,4 +134,51 @@ Deno.test("Collection Validation", () => {
   assertThrows(() => collection.add(-1), Error, "Invalid card index")
 
   assertThrows(() => collection.addMany([0, 48, 1]), Error, "Invalid card index")
+})
+
+Deno.test("Collection String Representation", () => {
+  const collection = createCollection({ cards: [0, 1, 2] })
+
+  // Test toString method
+  assertEquals(collection.toString(), "Collection(0, 1, 2)")
+
+  // Test empty collection
+  const emptyCollection = createCollection()
+  assertEquals(emptyCollection.toString(), "Collection()")
+})
+
+Deno.test("Collection JSON Serialization", () => {
+  const original = createCollection({ cards: [0, 1, 2] })
+
+  // Test toJSON method
+  assertEquals(original.toJSON(), [0, 1, 2])
+
+  // Test JSON.stringify integration
+  const json = JSON.stringify(original)
+  assertEquals(json, "[0,1,2]")
+
+  // Test empty collection
+  const empty = createCollection()
+  assertEquals(JSON.stringify(empty), "[]")
+})
+
+Deno.test("Collection JSON Deserialization", () => {
+  const original = createCollection({ cards: [0, 1, 2] })
+  const json = JSON.stringify(original)
+
+  // Test creating from JSON string
+  const restored = createCollection({ fromJSON: json })
+  assertEquals(restored.size, 3)
+  assertEquals(Array.from(restored), [0, 1, 2])
+
+  // Test with empty collection
+  const emptyJson = "[]"
+  const emptyRestored = createCollection({ fromJSON: emptyJson })
+  assertEquals(emptyRestored.size, 0)
+
+  // Test invalid JSON
+  assertThrows(() => createCollection({ fromJSON: "invalid json" }), Error, "Unexpected token")
+
+  // Test invalid card indices in JSON
+  assertThrows(() => createCollection({ fromJSON: "[-1]" }), Error, "Invalid card index")
 })
