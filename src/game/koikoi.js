@@ -2,6 +2,7 @@ import { createGameState } from "./state.js"
 import { initializeRound } from "./setup.js"
 import { isMatch, hasMatch } from "../core/matching.js"
 import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.js"
+import { validateGameState } from "./state.js"
 
 /**
  * @typedef {'WAITING_FOR_HAND_CARD'|'WAITING_FOR_FIELD_CARDS'|'WAITING_FOR_DECK_MATCH'|'WAITING_FOR_KOI_DECISION'|'NO_MATCHES_DISCARD'|'ROUND_END'} GamePhase
@@ -14,450 +15,434 @@ import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.js"
  * @property {Object} [data] - Additional data specific to the result type
  */
 
-export class KoiKoi {
-  /**
-   * @param {Object} [options]
-   * @param {Object} [options.rules] - Custom scoring rules
-   */
-  constructor(options = {}) {
-    this.state = null
-    this.phase = null
-    this.selectedHandCard = null
-    this.selectedFieldCards = new Set()
-    this.drawnCard = null
-    this.scoring = createScoringManager(options.rules || KOIKOI_RULES)
-  }
+/**
+ * @typedef {import('./state.js').GameState} GameState
+ * @typedef {import('../scoring/manager.js').ScoringManager} ScoringManager
+ */
 
-  /**
-   * Start a new game round
-   * @returns {Object} Initial game state and any teyaku
-   */
-  startRound() {
-    const playerIds = ["player1", "player2"]
-    const { state, teyaku } = initializeRound(playerIds)
-    this.state = state
-    this.phase = "WAITING_FOR_HAND_CARD"
-    this.drawnCard = null
-    return { state: this.getState(), teyaku }
-  }
+/**
+ * Creates a new KoiKoi game instance
+ * @param {Object} [options]
+ * @param {Object} [options.rules] - Custom scoring rules
+ * @param {GameState} [options.initialState] - Initial game state
+ * @param {boolean} [options.debug] - Whether to enable debug mode
+ * @returns {KoiKoiGame}
+ */
+export const createKoiKoiGame = (options = {}) => {
+  /** @type {GameState} */
+  let state = null
 
-  /**
-   * Get current game state
-   * @returns {Object} Current game state and phase
-   */
-  getState() {
-    return {
-      ...this.state,
-      phase: this.phase,
-      selectedHandCard: this.selectedHandCard,
-      selectedFieldCards: Array.from(this.selectedFieldCards),
-      drawnCard: this.drawnCard,
+  /** @type {string} */
+  let currentPlayer = null
+
+  /** @type {GamePhase} */
+  let phase = null
+
+  /** @type {number} */
+  let selectedHandCard = null
+
+  /** @type {Set<number>} */
+  const selectedFieldCards = new Set()
+
+  /** @type {number} */
+  let drawnCard = null
+
+  /** @type {ScoringManager} */
+  const scoring = createScoringManager(options.rules || KOIKOI_RULES)
+
+  /** @type {boolean} */
+  const debug = options.debug || false
+
+  const log = (message) => {
+    if (debug) {
+      console.log(message)
     }
   }
 
   /**
-   * Select a card from hand or field
-   * @param {number} cardIndex
-   * @param {string} source - 'hand' or 'field'
+   * Sets the game phase (only available in debug mode)
+   * @param {GamePhase} newPhase
+   * @throws {Error} If not in debug mode
+   */
+  const setPhase = (newPhase) => {
+    if (!debug) {
+      throw new Error("Phase can only be set in debug mode")
+    }
+    phase = newPhase
+    log(`Phase set to ${newPhase}`)
+  }
+
+  /**
+   * Switches to the next player and resets selection state
+   */
+  const switchPlayers = () => {
+    currentPlayer = currentPlayer === "player1" ? "player2" : "player1"
+    selectedHandCard = null
+    selectedFieldCards.clear()
+    drawnCard = null
+    phase = "WAITING_FOR_HAND_CARD"
+  }
+
+  /**
+   * Draws a card and handles matching logic
    * @returns {GameResult}
    */
-  selectCard(cardIndex, source) {
-    if (!this.state) {
-      return { type: "ERROR", message: "Game not initialized" }
-    }
-
-    if (source === "hand") {
-      return this._handleHandCardSelection(cardIndex)
-    } else if (source === "field") {
-      return this._handleFieldCardSelection(cardIndex)
-    }
-
-    return { type: "ERROR", message: "Invalid source" }
-  }
-
-  /**
-   * Handle selection of a card from the current player's hand
-   * @private
-   */
-  _handleHandCardSelection(cardIndex) {
-    if (
-      !["WAITING_FOR_HAND_CARD", "WAITING_FOR_FIELD_CARDS", "NO_MATCHES_DISCARD"].includes(
-        this.phase
-      )
-    ) {
-      return { type: "ERROR", message: "Not waiting for hand card selection" }
-    }
-
-    // Handle deselection if clicking the same card in field selection phase
-    if (this.selectedHandCard === cardIndex) {
-      this.selectedHandCard = null
-      this.selectedFieldCards.clear()
-      this.phase = "WAITING_FOR_HAND_CARD"
-      return {
-        type: "SELECTION_UPDATED",
-        data: {
-          selectedHandCard: null,
-          selectedFieldCards: [],
-          phase: this.phase,
-        },
-      }
-    }
-
-    const currentHand = this.state.players[this.state.currentPlayer].hand
-
-    // Verify card is in current player's hand
-    if (!currentHand.has(cardIndex)) {
-      return { type: "ERROR", message: "Card not in current player's hand" }
-    }
-
-    // Check if any matches are available in the field
-    const hasAnyMatches = Array.from(currentHand).some((handCard) =>
-      hasMatch(this.state.field, handCard)
-    )
-    console.log({
-      hasAnyMatches,
-      hasMatch: hasMatch(this.state.field, cardIndex),
-      cardIndex,
-      currentSelectedCard: this.selectedHandCard,
-    })
-
-    // Select new hand card
-    this.selectedHandCard = cardIndex
-    this.selectedFieldCards.clear()
-
-    // If no matches available, move to discard phase
-    if (!hasAnyMatches || !hasMatch(this.state.field, cardIndex)) {
-      this.phase = "NO_MATCHES_DISCARD"
-    } else {
-      this.phase = "WAITING_FOR_FIELD_CARDS"
-    }
-
-    return {
-      type: hasAnyMatches ? "SELECTION_UPDATED" : "NO_MATCHES",
-      data: {
-        selectedHandCard: this.selectedHandCard,
-        selectedFieldCards: Array.from(this.selectedFieldCards),
-        phase: this.phase,
-        hasMatches: hasAnyMatches,
-        canMatch: hasAnyMatches && hasMatch(this.state.field, cardIndex),
-      },
-    }
-  }
-
-  /**
-   * Handle selection of a card from the field
-   * @private
-   */
-  _handleFieldCardSelection(cardIndex) {
-    const isDrawnPhase = this.phase === "WAITING_FOR_DECK_MATCH"
-    const isHandPhase = this.phase === "WAITING_FOR_FIELD_CARDS"
-
-    if (!isDrawnPhase && !isHandPhase) {
-      return { type: "ERROR", message: "Not in a matching phase" }
-    }
-
-    // In drawn card phase, we use the drawn card instead of selected hand card
-    const matchingCard = isDrawnPhase ? this.drawnCard : this.selectedHandCard
-    if (!matchingCard) {
-      return {
-        type: "ERROR",
-        message: isDrawnPhase ? "No drawn card" : "Must select hand card first",
-      }
-    }
-
-    if (!this.state.field.has(cardIndex)) {
-      return { type: "ERROR", message: "Card not on field" }
-    }
-
-    // Handle deselection of field card
-    if (this.selectedFieldCards.has(cardIndex)) {
-      this.selectedFieldCards.delete(cardIndex)
-      return {
-        type: "SELECTION_UPDATED",
-        data: {
-          selectedHandCard: this.selectedHandCard,
-          selectedFieldCards: Array.from(this.selectedFieldCards),
-          drawnCard: this.drawnCard,
-          phase: this.phase,
-        },
-      }
-    }
-
-    const isValidMatch = isMatch(matchingCard, cardIndex)
-    if (!isValidMatch) {
-      return { type: "MATCH_INVALID", message: "Cards do not match" }
-    }
-
-    this.selectedFieldCards.add(cardIndex)
-
-    return {
-      type: "SELECTION_UPDATED",
-      data: {
-        selectedHandCard: this.selectedHandCard,
-        selectedFieldCards: Array.from(this.selectedFieldCards),
-        drawnCard: this.drawnCard,
-        phase: this.phase,
-      },
-    }
-  }
-
-  /**
-   * Place selected card on field when no matches are available
-   * @returns {GameResult}
-   */
-  placeSelectedCard() {
-    if (this.phase !== "NO_MATCHES_DISCARD") {
-      return { type: "ERROR", message: "Can only place card when no matches are available" }
-    }
-
-    if (!this.selectedHandCard) {
-      return { type: "ERROR", message: "No card selected" }
-    }
-
-    const currentHand = this.state.players[this.state.currentPlayer].hand
-
-    // Verify the card is still in hand
-    if (!currentHand.has(this.selectedHandCard)) {
-      return { type: "ERROR", message: "Selected card not in hand" }
-    }
-
-    // Place the card on the field
-    currentHand.remove(this.selectedHandCard)
-    this.state.field.add(this.selectedHandCard)
-
-    // Clear selection and draw next card
-    const cardPlaced = this.selectedHandCard
-    this.selectedHandCard = null
-    this.selectedFieldCards.clear()
-
-    // Draw next card
-    return {
-      type: "CARD_PLACED",
-      data: {
-        placedCard: cardPlaced,
-        nextAction: this._drawCard(),
-      },
-    }
-  }
-
-  /**
-   * Play currently selected cards
-   * @returns {GameResult}
-   */
-  playCards() {
-    const isDrawnPhase = this.phase === "WAITING_FOR_DECK_MATCH"
-    const isHandPhase = this.phase === "WAITING_FOR_FIELD_CARDS"
-
-    if (!isDrawnPhase && !isHandPhase) {
-      return { type: "ERROR", message: "Not in a matching phase" }
-    }
-
-    const matchingCard = isDrawnPhase ? this.drawnCard : this.selectedHandCard
-    if (!matchingCard) {
-      return { type: "ERROR", message: "No card selected" }
-    }
-
-    // Get current player's collections
-    const currentHand = this.state.players[this.state.currentPlayer].hand
-    const capturedPile = this.state.players[this.state.currentPlayer].captured
-
-    if (isHandPhase) {
-      // Regular matching play
-      currentHand.remove(this.selectedHandCard)
-      capturedPile.add(this.selectedHandCard)
-    } else {
-      // Add drawn card to captured pile
-      capturedPile.add(this.drawnCard)
-    }
-
-    // Move matched field cards
-    this.selectedFieldCards.forEach((cardIndex) => {
-      this.state.field.remove(cardIndex)
-      capturedPile.add(cardIndex)
-    })
-
-    if (isHandPhase) {
-      // After hand phase, draw a card
-      return this._drawCard()
-    } else {
-      // After drawn phase, check for scoring
-      const completedYaku = this.scoring(capturedPile)
-      if (completedYaku.length > 0) {
-        this.state.completedYaku = completedYaku
-        this.phase = "WAITING_FOR_KOI_DECISION"
-        return {
-          type: "SCORE_UPDATE",
-          data: { completedYaku, phase: this.phase },
-        }
-      }
-
-      // Switch players if no scoring
-      this._switchPlayers()
-      return { type: "TURN_END", data: { phase: this.phase } }
-    }
-  }
-
-  /**
-   * Draw a card from the deck
-   * @private
-   * @returns {GameResult}
-   */
-  _drawCard() {
-    if (this.state.deck.length === 0) {
-      this.phase = "ROUND_END"
+  const drawCard = () => {
+    if (state.deck.isEmpty) {
+      phase = "ROUND_END"
       return { type: "ROUND_END", message: "Deck is empty" }
     }
 
-    // Draw card
-    this.drawnCard = this.state.deck.pop()
-    this.selectedFieldCards.clear()
-    this.selectedHandCard = null
+    drawnCard = state.deck.draw()
+    selectedFieldCards.clear()
+    selectedHandCard = null
 
-    // Check if drawn card matches any field cards
-    const matchingCards = Array.from(this.state.field).filter((fieldCard) =>
-      isMatch(this.drawnCard, fieldCard)
+    const matchingCards = Array.from(state.field).filter((fieldCard) =>
+      isMatch(drawnCard, fieldCard)
     )
     const hasMatches = matchingCards.length > 0
 
     if (hasMatches) {
-      // If there are matches, must enter matching phase
-      this.phase = "WAITING_FOR_DECK_MATCH"
-    } else {
-      // If no matches, automatically place on field and check for scoring
-      this.state.field.add(this.drawnCard)
-      const placedCard = this.drawnCard
-      this.drawnCard = null
-
-      // Check for scoring
-      const capturedPile = this.state.players[this.state.currentPlayer].captured
-      const completedYaku = this.scoring(capturedPile)
-      if (completedYaku.length > 0) {
-        this.state.completedYaku = completedYaku
-        this.phase = "WAITING_FOR_KOI_DECISION"
-        return {
-          type: "SCORE_UPDATE",
-          data: {
-            drawnCard: placedCard,
-            placedOnField: true,
-            completedYaku,
-            phase: this.phase,
-          },
-        }
-      }
-
-      // Switch players if no scoring
-      this._switchPlayers()
+      phase = "WAITING_FOR_DECK_MATCH"
       return {
         type: "DECK_DRAW",
+        data: { drawnCard, hasMatches: true, matchingCards, phase },
+      }
+    }
+
+    // Auto-place card and check scoring
+    state.field.add(drawnCard)
+    const placedCard = drawnCard
+    drawnCard = null
+
+    const capturedPile = state.players[currentPlayer].captured
+    const completedYaku = scoring(capturedPile)
+
+    if (completedYaku.length > 0) {
+      state.completedYaku = completedYaku
+      phase = "WAITING_FOR_KOI_DECISION"
+      return {
+        type: "SCORE_UPDATE",
+        data: { drawnCard: placedCard, placedOnField: true, completedYaku, phase },
+      }
+    }
+
+    switchPlayers()
+    return {
+      type: "DECK_DRAW",
+      data: { drawnCard: placedCard, hasMatches: false, placedOnField: true, phase },
+    }
+  }
+
+  /**
+   * Handles selection of a card from the player's hand
+   * @param {number} cardIndex
+   * @returns {GameResult}
+   */
+  const handleHandCardSelection = (cardIndex) => {
+    const currentHand = state.players[currentPlayer].hand
+    const card = Array.from(currentHand)[cardIndex]
+
+    if (!card) {
+      return { type: "ERROR", message: "Card not in current player's hand" }
+    }
+
+    selectedHandCard = card
+    selectedFieldCards.clear()
+
+    const matchingCards = Array.from(state.field).filter((fieldCard) => isMatch(card, fieldCard))
+
+    if (matchingCards.length === 0) {
+      phase = "NO_MATCHES_DISCARD"
+      return {
+        type: "NO_MATCHES",
         data: {
-          drawnCard: placedCard,
+          selectedCard: card,
           hasMatches: false,
-          placedOnField: true,
-          phase: this.phase,
         },
       }
     }
 
+    phase = "WAITING_FOR_FIELD_CARDS"
     return {
-      type: "DECK_DRAW",
+      type: "SELECTION_UPDATED",
       data: {
-        drawnCard: this.drawnCard,
-        hasMatches: true,
+        selectedHandCard: card,
         matchingCards,
-        phase: this.phase,
+        phase,
       },
     }
   }
 
   /**
-   * Make koi-koi decision after scoring
-   * @param {boolean} chooseKoiKoi - True to continue (koi-koi), false to end round
+   * Handles selection of cards from the field
+   * @param {number} cardIndex
    * @returns {GameResult}
    */
-  makeKoiKoiDecision(chooseKoiKoi) {
-    if (this.phase !== "WAITING_FOR_KOI_DECISION") {
-      return { type: "ERROR", message: "Not waiting for koi-koi decision" }
+  const handleFieldCardSelection = (cardIndex) => {
+    if (!selectedHandCard && !drawnCard) {
+      return { type: "ERROR", message: "Must select hand card first" }
     }
 
-    if (chooseKoiKoi) {
-      this._switchPlayers()
-      return { type: "TURN_END", data: { phase: this.phase } }
+    const sourceCard = selectedHandCard || drawnCard
+    const fieldCard = Array.from(state.field)[cardIndex]
+
+    if (!fieldCard) {
+      return { type: "ERROR", message: "Invalid field card index" }
+    }
+
+    if (!isMatch(sourceCard, fieldCard)) {
+      return { type: "ERROR", message: "Selected cards do not match" }
+    }
+
+    if (selectedFieldCards.has(fieldCard)) {
+      selectedFieldCards.delete(fieldCard)
     } else {
-      this.phase = "ROUND_END"
-      return {
-        type: "ROUND_END",
-        data: {
-          winner: this.state.currentPlayer,
-          yaku: this.state.completedYaku,
-        },
-      }
+      selectedFieldCards.add(fieldCard)
+    }
+
+    return {
+      type: "SELECTION_UPDATED",
+      data: {
+        selectedHandCard: sourceCard,
+        selectedFieldCards: Array.from(selectedFieldCards),
+        phase,
+      },
     }
   }
 
   /**
-   * Switch to the next player
-   * @private
-   */
-  _switchPlayers() {
-    this.state.currentPlayer = this.state.currentPlayer === "player1" ? "player2" : "player1"
-    this.selectedHandCard = null
-    this.selectedFieldCards.clear()
-    this.drawnCard = null
-    this.phase = "WAITING_FOR_HAND_CARD"
-  }
-
-  /**
-   * Place drawn card on field (when no matches or choosing not to match)
+   * Places selected card on the field when no matches are available
    * @returns {GameResult}
    */
-  placeDrawnCard() {
-    if (this.phase !== "WAITING_FOR_DECK_MATCH") {
-      return { type: "ERROR", message: "Not in deck matching phase" }
+  const placeSelectedCard = () => {
+    if (!selectedHandCard) {
+      return { type: "ERROR", message: "No card selected" }
     }
 
-    if (this.drawnCard === null) {
-      return { type: "ERROR", message: "No drawn card" }
-    }
+    // Remove from hand and add to field
+    state.players[currentPlayer].hand.remove(selectedHandCard)
+    state.field.add(selectedHandCard)
 
-    // Check if there are any matches
-    const hasMatches = Array.from(this.state.field).some((fieldCard) =>
-      isMatch(this.drawnCard, fieldCard)
-    )
+    const placedCard = selectedHandCard
+    selectedHandCard = null
 
-    if (hasMatches) {
-      return { type: "ERROR", message: "Must capture matching cards when available" }
-    }
-
-    // Place card on field
-    this.state.field.add(this.drawnCard)
-    const placedCard = this.drawnCard
-    this.drawnCard = null
-    this.selectedFieldCards.clear()
-
-    // Check for scoring
-    const capturedPile = this.state.players[this.state.currentPlayer].captured
-    const completedYaku = this.scoring(capturedPile)
-    if (completedYaku.length > 0) {
-      this.state.completedYaku = completedYaku
-      this.phase = "WAITING_FOR_KOI_DECISION"
-      return {
-        type: "SCORE_UPDATE",
-        data: {
-          placedCard,
-          completedYaku,
-          phase: this.phase,
-        },
-      }
-    }
-
-    // Switch players if no scoring
-    this._switchPlayers()
     return {
       type: "CARD_PLACED",
       data: {
         placedCard,
-        phase: this.phase,
+        nextAction: drawCard(),
       },
     }
   }
+
+  /**
+   * Captures selected matching cards
+   * @returns {GameResult}
+   */
+  const captureCards = () => {
+    if ((!selectedHandCard && !drawnCard) || selectedFieldCards.size === 0) {
+      return { type: "ERROR", message: "Invalid card selection" }
+    }
+
+    const sourceCard = selectedHandCard || drawnCard
+    const fieldCards = Array.from(selectedFieldCards)
+
+    // Validate all matches
+    if (!fieldCards.every((card) => isMatch(sourceCard, card))) {
+      return { type: "ERROR", message: "Invalid matches selected" }
+    }
+
+    // Remove cards from their sources
+    if (selectedHandCard) {
+      state.players[currentPlayer].hand.delete(selectedHandCard)
+    }
+    fieldCards.forEach((card) => state.field.delete(card))
+
+    // Add to captured pile
+    const capturedPile = state.players[currentPlayer].captured
+    capturedPile.push(sourceCard, ...fieldCards)
+
+    // Check for completed yaku
+    const completedYaku = scoring(capturedPile)
+
+    selectedHandCard = null
+    selectedFieldCards.clear()
+    drawnCard = null
+
+    if (completedYaku.length > 0) {
+      state.completedYaku = completedYaku
+      phase = "WAITING_FOR_KOI_DECISION"
+      return {
+        type: "SCORE_UPDATE",
+        data: { completedYaku, phase },
+      }
+    }
+
+    if (!selectedHandCard) {
+      switchPlayers()
+    }
+
+    return {
+      type: "CAPTURE_COMPLETE",
+      data: { phase },
+    }
+  }
+
+  /**
+   * Loads a game state
+   * @param {GameState} newState - State to load
+   * @returns {GameResult}
+   */
+  const loadState = (newState) => {
+    if (!validateGameState(newState)) {
+      return {
+        type: "ERROR",
+        message: "Invalid game state",
+      }
+    }
+
+    // Reset current selections and phase
+    selectedHandCard = null
+    selectedFieldCards.clear()
+    drawnCard = null
+
+    // Apply new state
+    state = newState
+    phase = "WAITING_FOR_HAND_CARD"
+
+    return {
+      type: "STATE_LOADED",
+      data: { state: api.getState() },
+    }
+  }
+
+  /**
+   * @type {KoiKoiGame}
+   */
+  const api = {
+    startRound: (players = ["player1", "player2"]) => {
+      if (!Array.isArray(players) || players.length !== 2) {
+        throw new Error("Players must be an array of length 2")
+      }
+
+      const result = initializeRound(players)
+
+      // If initial state was provided, use it instead
+      if (options.initialState) {
+        const loadResult = loadState(options.initialState)
+        if (loadResult.type === "ERROR") {
+          throw new Error(loadResult.message)
+        }
+        return { state: api.getState(), teyaku: result.teyaku }
+      }
+
+      state = result.state
+      phase = "WAITING_FOR_HAND_CARD"
+      drawnCard = null
+      currentPlayer = result.firstPlayer
+      return { state: api.getState(), teyaku: result.teyaku }
+    },
+
+    getState: () => ({
+      ...state,
+      currentPlayer,
+      phase,
+      selectedHandCard,
+      selectedFieldCards: Array.from(selectedFieldCards),
+      drawnCard,
+    }),
+
+    selectCard: (cardIndex, source) => {
+      if (!state) {
+        return { type: "ERROR", message: "Game not initialized" }
+      }
+
+      if (source === "hand") {
+        return handleHandCardSelection(cardIndex)
+      } else if (source === "field") {
+        return handleFieldCardSelection(cardIndex)
+      }
+
+      return { type: "ERROR", message: "Invalid source" }
+    },
+
+    placeSelectedCard: () => {
+      if (!state) {
+        return { type: "ERROR", message: "Game not initialized" }
+      }
+
+      if (phase !== "NO_MATCHES_DISCARD") {
+        return { type: "ERROR", message: "Invalid game phase for placing card" }
+      }
+
+      return placeSelectedCard()
+    },
+
+    captureCards: () => {
+      if (!state) {
+        return { type: "ERROR", message: "Game not initialized" }
+      }
+
+      if (phase !== "WAITING_FOR_FIELD_CARDS" && phase !== "WAITING_FOR_DECK_MATCH") {
+        return { type: "ERROR", message: "Invalid game phase for capturing cards" }
+      }
+
+      return captureCards()
+    },
+
+    makeKoiKoiDecision: (continuePlay) => {
+      if (!state) {
+        return { type: "ERROR", message: "Game not initialized" }
+      }
+
+      if (phase !== "WAITING_FOR_KOI_DECISION") {
+        return { type: "ERROR", message: "Invalid game phase for koi-koi decision" }
+      }
+
+      if (continuePlay) {
+        switchPlayers()
+        return {
+          type: "TURN_END",
+          data: { phase },
+        }
+      }
+
+      phase = "ROUND_END"
+      return {
+        type: "ROUND_END",
+        data: {
+          winner: currentPlayer,
+          yaku: state.completedYaku,
+          phase,
+        },
+      }
+    },
+
+    loadState,
+
+    setPhase: debug ? setPhase : undefined,
+
+    getCurrentPlayer: () => currentPlayer,
+
+    ...(debug && {
+      setCurrentPlayer: (player) => {
+        if (state.players[player]) {
+          currentPlayer = player
+        } else {
+          throw new Error(`Invalid player: ${player}`)
+        }
+      },
+    }),
+  }
+
+  return api
 }
+
+/**
+ * @typedef {Object} KoiKoiGame
+ * @property {(players?: string[]) => Object} startRound
+ * @property {() => Object} getState
+ * @property {(cardIndex: number, source: string) => GameResult} selectCard
+ * ... other method definitions
+ */

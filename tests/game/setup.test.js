@@ -58,11 +58,23 @@ Deno.test("Initial Card Dealing", () => {
 })
 
 Deno.test("Round Initialization", () => {
-  const { state, teyaku } = initializeRound(TEST_PLAYERS)
+  const { state, teyaku, firstPlayer } = initializeRound(["player1", "player2"])
 
-  // Check complete setup
-  assertEquals(state.currentPlayer !== null, true, "Should set first player")
-  assertEquals(state.field.size, 8, "Should deal field")
-  assertEquals(state.players[TEST_PLAYERS[0]].hand.size, 8, "Should deal hands")
-  assertEquals(typeof teyaku, "object", "Should check for teyaku")
+  // Check basic structure
+  assertEquals(state.deck.size, 24, "Should have remaining deck cards")
+  assertEquals(state.field.size, 8, "Should have field cards")
+  assertEquals(Object.keys(state.players).length, 2, "Should have two players")
+
+  // Check player states
+  for (const player of ["player1", "player2"]) {
+    assertEquals(state.players[player].hand.size, 8, "Should have 8 cards in hand")
+    assertEquals(state.players[player].captured.size, 0, "Should start with no captured cards")
+  }
+
+  // Check first player determination
+  assertNotEquals(firstPlayer, null, "Should determine first player")
+  assertEquals(["player1", "player2"].includes(firstPlayer), true, "Should be valid player")
+
+  // Check teyaku object exists
+  assertNotEquals(teyaku, undefined, "Should check for teyaku")
 })

@@ -70,16 +70,18 @@ export function checkInitialTeyaku(state) {
  */
 export function initializeRound(playerIds, options = {}) {
   // Create initial state
-  let state = createGameState(playerIds, options)
-
-  // Determine first player
-  state.currentPlayer = determineFirstPlayer(state)
+  const state = createGameState(playerIds, options)
 
   // Deal cards
-  state = dealInitialCards(state)
+  dealInitialCards(state)
 
   // Check for teyaku
   const teyaku = checkInitialTeyaku(state)
 
-  return { state, teyaku }
+  // Return state and first player separately
+  return {
+    state,
+    teyaku,
+    firstPlayer: determineFirstPlayer(state),
+  }
 }
