@@ -1,6 +1,6 @@
 import { initializeRound } from "./setup.js"
-import { isMatch } from "../core/matching.js"
-import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.js"
+import { isMatch } from "../core/matching.ts"
+import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.ts"
 import { validateGameState } from "./state.js"
 import { isNullish } from "../utils/is-nullish.js"
 
@@ -17,7 +17,7 @@ import { isNullish } from "../utils/is-nullish.js"
 
 /**
  * @typedef {import('./state.js').GameState} GameState
- * @typedef {import('../scoring/manager.js').ScoringManager} ScoringManager
+ * @typedef {import('../scoring/manager.ts').ScoringManager} ScoringManager
  */
 
 /**

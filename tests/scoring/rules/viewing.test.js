@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../../src/core/collection.js"
-import { createViewingChecker } from "../../../src/scoring/rules/viewing.js"
+import { createCollection } from "../../../src/core/collection.ts"
+import { createViewingChecker } from "../../../src/scoring/rules/viewing.ts"
 
 // Helper function to get card indices for specific cards
 const CHERRY_CURTAIN = 8 // Cherry Blossom Curtain (Month 3)

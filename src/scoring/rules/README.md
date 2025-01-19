@@ -8,14 +8,16 @@ This module provides a flexible system for configuring how yaku (役) are scored
 
 Rule configurations are organized by yaku category:
 
-```javascript
-type RuleConfig = {
-  bright?: BrightRules,
-  animal?: AnimalRules,
-  ribbon?: RibbonRules,
-  viewing?: ViewingRules,
-  chaff?: ChaffRules,
-  month?: MonthRules,
+```typescript
+import type { RuleConfig } from "./types"
+
+const config: RuleConfig = {
+  bright: BrightRules,
+  animal: AnimalRules,
+  ribbon: RibbonRules,
+  viewing: ViewingRules,
+  chaff: ChaffRules,
+  month: MonthRules,
 }
 ```
 
@@ -23,19 +25,23 @@ type RuleConfig = {
 
 #### Bright Rules
 
-```javascript
+```typescript
 type BrightRules = {
-  allowMultiple?: boolean, // Allow scoring multiple bright yaku
+  /** Allow scoring multiple bright yaku */
+  allowMultiple?: boolean
 }
 ```
 
 #### Animal Rules
 
-```javascript
+```typescript
 type AnimalRules = {
-  allowMultiple?: boolean, // Allow scoring both Ino-Shika-Chou and Tane
-  extraPoints?: number, // Points per additional animal
-  countSakeCup?: boolean, // Count sake cup as an animal
+  /** Allow scoring both Ino-Shika-Chou and Tane */
+  allowMultiple?: boolean
+  /** Points per additional animal */
+  extraPoints?: number
+  /** Count sake cup as an animal */
+  countSakeCup?: boolean
 }
 
 type SakeCupMode = "ANIMAL_ONLY" | "CHAFF_ONLY" | "BOTH"
@@ -43,21 +49,27 @@ type SakeCupMode = "ANIMAL_ONLY" | "CHAFF_ONLY" | "BOTH"
 
 #### Ribbon Rules
 
-```javascript
+```typescript
 type RibbonRules = {
-  allowMultiple?: boolean, // Allow scoring multiple ribbon yaku
-  extraPoints?: number, // Points per additional ribbon
+  /** Allow scoring multiple ribbon yaku */
+  allowMultiple?: boolean
+  /** Points per additional ribbon */
+  extraPoints?: number
 }
 ```
 
 #### Viewing Rules
 
-```javascript
+```typescript
 type ViewingRules = {
-  mode?: ViewingYakuMode, // How to recognize viewing yaku
-  weatherDependent?: boolean, // Apply weather effects
-  seasonalBonus?: boolean, // Award bonus points during appropriate seasons
-  seasonalOnly?: boolean, // Restrict yaku to their appropriate seasons
+  /** How to recognize viewing yaku */
+  mode?: ViewingYakuMode
+  /** Apply weather effects */
+  weatherDependent?: boolean
+  /** Award bonus points during appropriate seasons */
+  seasonalBonus?: boolean
+  /** Restrict yaku to their appropriate seasons */
+  seasonalOnly?: boolean
 }
 
 type ViewingYakuMode = "NEVER" | "LIMITED" | "ALWAYS"
@@ -68,18 +80,21 @@ type ViewingYakuMode = "NEVER" | "LIMITED" | "ALWAYS"
 
 #### Chaff Rules
 
-```javascript
+```typescript
 type ChaffRules = {
-  extraPoints?: number, // Points per additional chaff
-  countSakeCup?: boolean, // Count sake cup as a chaff
+  /** Points per additional chaff */
+  extraPoints?: number
+  /** Count sake cup as a chaff */
+  countSakeCup?: boolean
 }
 ```
 
 #### Month Rules
 
-```javascript
+```typescript
 type MonthRules = {
-  allowMultipleMonths?: boolean, // Allow scoring multiple month sets
+  /** Allow scoring multiple month sets */
+  allowMultipleMonths?: boolean
 }
 ```
 
@@ -89,8 +104,10 @@ type MonthRules = {
 
 Standard Koi-Koi scoring rules:
 
-```javascript
-export const KOIKOI_RULES = {
+```typescript
+import type { RuleConfig } from "./types"
+
+export const KOIKOI_RULES: RuleConfig = {
   bright: { allowMultiple: false },
   animal: {
     sakeCupMode: "ANIMAL_ONLY",
@@ -162,23 +179,26 @@ Controls when viewing yaku are recognized:
 
 Each yaku category has a rule checker factory:
 
-```javascript
-import { createViewingChecker } from "./rules/viewing.js"
+```typescript
+import { createViewingChecker } from "./rules/viewing"
+import type { ViewingRules } from "./types"
 
 // House rules example
 const viewingChecker = createViewingChecker({
   mode: "LIMITED",
   weatherDependent: true,
   seasonalBonus: true,
-})
+} as ViewingRules)
 ```
 
 ### Custom Rule Sets
 
 Create custom rule sets by combining options:
 
-```javascript
-const customRules = {
+```typescript
+import type { RuleConfig } from "./types"
+
+const customRules: RuleConfig = {
   viewing: {
     mode: "LIMITED",
     weatherDependent: true,

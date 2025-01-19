@@ -1,5 +1,5 @@
-import { defineYaku } from "../base.js"
-import { CardType } from "../../../core/cards.js"
+import { defineYaku } from "../base.ts"
+import { CardType } from "../../../core/cards.ts"
 
 // Poetry Ribbons (赤短)
 export const AKA_TAN = defineYaku({

@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../../src/core/collection.js"
-import { createHandChecker } from "../../../src/scoring/rules/hand.js"
+import { createCollection } from "../../../src/core/collection.ts"
+import { createHandChecker } from "../../../src/scoring/rules/hand.ts"
 
 // Helper function to create cards of a specific month
 const createMonthCards = (month, count) => {

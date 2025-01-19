@@ -6,6 +6,9 @@
     "dev": "deno run --watch main.js",
     "test": "deno test"
   },
+  "compilerOptions": {
+    "lib": ["deno.ns"]
+  },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
   },

@@ -1,26 +1,23 @@
-import { INO_SHIKA_CHOU, TANE } from "../yaku/standard/animal.js"
-import { CardType } from "../../core/cards.js"
-import { createCollection } from "../../core/collection.js"
-
-/**
- * @typedef {import('./types.js').AnimalRules} AnimalRules
- */
+import { INO_SHIKA_CHOU, TANE } from "../yaku/standard/animal.ts"
+import { CardType } from "../../core/cards.ts"
+import { createCollection } from "../../core/collection.ts"
+import type { Collection } from "../../core/types.ts"
+import type { AnimalRules } from "./types.ts"
+import type { ScoringManager, YakuResult } from "../types.ts"
 
 const SAKE_CUP = 32 // Chrysanthemum Sake Cup
 
 /**
  * Create a custom animal yaku checker with specific rules
- * @param {AnimalRules} [rules={}]
  */
-export const createAnimalChecker = (rules = {}) => {
+export const createAnimalChecker = (rules: AnimalRules = {}): ScoringManager => {
   const { allowMultiple = true, extraPoints = 1, countSakeCup = true } = rules
 
   /**
-   * @param {import('../../core/collection.js').Collection} collection
-   * @returns {import('../yaku/types.js').YakuResults}
+   * Check animal yaku for a collection of cards
    */
-  return (collection) => {
-    const completed = []
+  return (collection: Collection): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     // Create effective collection based on sake cup handling
     let effectiveCollection = collection

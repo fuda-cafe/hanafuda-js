@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../../src/core/collection.js"
-import { createAnimalChecker } from "../../../src/scoring/rules/animal.js"
+import { createCollection } from "../../../src/core/collection.ts"
+import { createAnimalChecker } from "../../../src/scoring/rules/animal.ts"
 
 // Helper function to get card indices for specific cards
 const BOAR = 24 // Bush Clover Boar (Month 7)

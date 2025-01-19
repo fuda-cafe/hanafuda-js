@@ -1,5 +1,5 @@
-import { defineYaku } from "../base.js"
-import { CardType } from "../../../core/cards.js"
+import { defineYaku } from "../base.ts"
+import { CardType } from "../../../core/cards.ts"
 
 // Boar-Deer-Butterfly (猪鹿蝶)
 export const INO_SHIKA_CHOU = defineYaku({

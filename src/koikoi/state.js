@@ -1,5 +1,5 @@
-import { createDeck } from "../core/deck.js"
-import { createCollection } from "../core/collection.js"
+import { createDeck } from "../core/deck.ts"
+import { createCollection } from "../core/collection.ts"
 
 /**
  * @typedef {Object} PlayerState

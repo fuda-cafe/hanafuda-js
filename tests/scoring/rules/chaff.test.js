@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../../src/core/collection.js"
-import { createChaffChecker } from "../../../src/scoring/rules/chaff.js"
+import { createCollection } from "../../../src/core/collection.ts"
+import { createChaffChecker } from "../../../src/scoring/rules/chaff.ts"
 
 // Helper function to get chaff cards
 const getChaffCards = (count) => {

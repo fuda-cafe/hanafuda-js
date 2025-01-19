@@ -1,9 +1,8 @@
-import { createCollection } from "../../core/collection.js"
-import { GOKOU, SHIKOU, AME_SHIKOU, SANKOU } from "../yaku/standard/bright.js"
-
-/**
- * @typedef {import('./types.js').BrightRules} BrightRules
- */
+import { createCollection } from "../../core/collection.ts"
+import type { Collection } from "../../core/types.ts"
+import type { ScoringManager, YakuResult } from "../types.ts"
+import { GOKOU, SHIKOU, AME_SHIKOU, SANKOU } from "../yaku/standard/bright.ts"
+import type { BrightRules } from "./types.ts"
 
 /**
  * Order of precedence for bright yaku (highest to lowest)
@@ -17,17 +16,15 @@ const RAIN_MAN = 40
 
 /**
  * Create a custom bright yaku checker with specific rules
- * @param {BrightRules} [rules={}]
  */
-export const createBrightChecker = (rules = {}) => {
+export const createBrightChecker = (rules: BrightRules = {}): ScoringManager => {
   const { allowMultiple = false } = rules
 
   /**
    * Check bright yaku for a collection of cards
-   * @param {import('../../core/collection.js').Collection} collection
    */
-  return (collection) => {
-    const completed = []
+  return (collection: Collection): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     for (const yaku of BRIGHT_PRECEDENCE) {
       let effectiveCollection = collection

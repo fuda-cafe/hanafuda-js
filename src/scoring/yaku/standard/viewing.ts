@@ -1,4 +1,4 @@
-import { defineYaku } from "../base.js"
+import { defineYaku } from "../base.ts"
 
 // Flower Viewing (花見酒)
 export const HANAMI = defineYaku({

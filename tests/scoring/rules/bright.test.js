@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../../src/core/collection.js"
-import { checkBrightYaku, createBrightChecker } from "../../../src/scoring/rules/bright.js"
-import { BRIGHT_INDICES } from "../../../src/core/cards.js"
+import { createCollection } from "../../../src/core/collection.ts"
+import { checkBrightYaku, createBrightChecker } from "../../../src/scoring/rules/bright.ts"
+import { BRIGHT_INDICES } from "../../../src/core/cards.ts"
 
 Deno.test("Bright Yaku Precedence", () => {
   const collection = createCollection()

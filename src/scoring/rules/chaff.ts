@@ -1,21 +1,19 @@
-import { KASU } from "../yaku/standard/chaff.js"
-import { CardType } from "../../core/cards.js"
-
-/**
- * @typedef {import('./types.js').ChaffRules} ChaffRules
- */
+import { KASU } from "../yaku/standard/chaff.ts"
+import { CardType } from "../../core/cards.ts"
+import type { ChaffRules } from "./types.ts"
+import type { Collection } from "../../core/types.ts"
+import type { ScoringManager, YakuResult } from "../types.ts"
 
 const SAKE_CUP = 32 // Chrysanthemum Sake Cup
 
 /**
  * Create a custom chaff yaku checker with specific rules
- * @param {ChaffRules} [rules={}]
  */
-export const createChaffChecker = (rules = {}) => {
+export const createChaffChecker = (rules: ChaffRules = {}): ScoringManager => {
   const { extraPoints = 1, countSakeCup = false } = rules
 
-  return (collection) => {
-    const completed = []
+  return (collection: Collection): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     // Count regular chaff cards
     const chaffCards = collection.findByType(CardType.CHAFF)

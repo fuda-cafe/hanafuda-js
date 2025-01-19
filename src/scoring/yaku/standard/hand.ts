@@ -1,4 +1,4 @@
-import { defineYaku } from "../base.js"
+import { defineYaku } from "../base.ts"
 
 // Four of a Kind (手四)
 export const TESHI = defineYaku({
@@ -7,7 +7,7 @@ export const TESHI = defineYaku({
   points: 6,
   pattern: {
     cards: [
-      { month: null, count: 4 }, // month will be determined during checking
+      { month: undefined, count: 4 }, // month will be determined during checking
     ],
   },
 })
@@ -19,10 +19,10 @@ export const KUTTSUKI = defineYaku({
   points: 6,
   pattern: {
     cards: [
-      { month: null, count: 2 }, // First pair
-      { month: null, count: 2 }, // Second pair
-      { month: null, count: 2 }, // Third pair
-      { month: null, count: 2 }, // Fourth pair
+      { month: undefined, count: 2 }, // First pair
+      { month: undefined, count: 2 }, // Second pair
+      { month: undefined, count: 2 }, // Third pair
+      { month: undefined, count: 2 }, // Fourth pair
     ],
   },
 })

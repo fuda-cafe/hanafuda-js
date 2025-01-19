@@ -1,5 +1,5 @@
-import { getCard } from "../core/cards.js"
-import { checkHandYaku } from "../scoring/rules/hand.js"
+import { getCard } from "../core/cards.ts"
+import { checkHandYaku } from "../scoring/rules/hand.ts"
 import { createGameState } from "./state.js"
 
 /**

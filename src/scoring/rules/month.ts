@@ -1,19 +1,17 @@
-import { TSUKI_FUDA } from "../yaku/standard/month.js"
-import { getCard } from "../../core/cards.js"
-
-/**
- * @typedef {import('./types.js').MonthRules} MonthRules
- */
+import { TSUKI_FUDA } from "../yaku/standard/month.ts"
+import { getCard } from "../../core/cards.ts"
+import type { Collection } from "../../core/types.ts"
+import type { ScoringContext, ScoringManager, YakuResult } from "../types.ts"
+import type { MonthRules } from "./types.ts"
 
 /**
  * Create a custom month cards yaku checker with specific rules
- * @param {MonthRules} [rules={}]
  */
-export const createMonthChecker = (rules = {}) => {
+export const createMonthChecker = (rules: MonthRules = {}): ScoringManager => {
   const { allowMultipleMonths = false } = rules
 
-  return (collection, context = null) => {
-    const completed = []
+  return (collection: Collection, context: ScoringContext = {}): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     if (!context?.currentMonth) return completed
 
@@ -42,7 +40,7 @@ export const createMonthChecker = (rules = {}) => {
       }
 
       // Add yaku for any other months with 4 cards
-      monthCounts.forEach((count, month) => {
+      monthCounts.forEach((count) => {
         if (count === 4) {
           completed.push({ name: TSUKI_FUDA.name, points: TSUKI_FUDA.points })
         }

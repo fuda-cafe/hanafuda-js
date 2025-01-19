@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert"
-import { createCollection } from "../../src/core/collection.js"
-import { createScoringManager, KOIKOI_RULES, HACHI_RULES } from "../../src/scoring/manager.js"
+import { createCollection } from "../../src/core/collection.ts"
+import { createScoringManager, KOIKOI_RULES, HACHI_RULES } from "../../src/scoring/manager.ts"
 
 // Test card indices
 const CRANE = 0 // Pine Bright

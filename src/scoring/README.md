@@ -4,22 +4,23 @@ The scoring module provides a flexible and extensible system for implementing Ha
 
 ## Components
 
-### Manager (`manager.js`)
+### Manager (`manager.ts`)
 
 The scoring manager orchestrates yaku checking and rule application:
 
-```javascript
-import { createScoringManager, KOIKOI_RULES } from "./scoring/manager.js"
+```typescript
+import { createScoringManager, KOIKOI_RULES } from "./scoring/manager"
+import type { ScoringContext, YakuResult } from "./scoring/rules/types"
 
 // Create manager with standard Koi-Koi rules
 const scoring = createScoringManager(KOIKOI_RULES)
 
 // Score a collection of cards
-const results = scoring(collection, {
+const results: YakuResult[] = scoring(collection, {
   currentMonth: 3,
   weather: "clear",
   checkTeyaku: false,
-})
+} as ScoringContext)
 // [{ name: "hanami-zake", points: 6 }, ...]
 ```
 
@@ -27,15 +28,18 @@ const results = scoring(collection, {
 
 Yaku are defined declaratively using patterns that describe card requirements:
 
-```javascript
-const SANKOU = defineYaku({
+```typescript
+import { CardType } from "../core/types"
+import type { YakuDefinition } from "./types"
+
+const SANKOU: YakuDefinition = {
   name: "sankou",
   description: ["Three Brights"],
   points: 6,
   pattern: {
     cards: [{ type: CardType.BRIGHT, count: 3 }],
   },
-})
+}
 ```
 
 See [Yaku Documentation](./yaku/README.md) for details on all yaku patterns.
@@ -44,10 +48,12 @@ See [Yaku Documentation](./yaku/README.md) for details on all yaku patterns.
 
 Rules modify how yaku are scored and can be customized per game variant:
 
-```javascript
-const config = {
+```typescript
+import type { RuleConfig } from "./rules/types"
+
+const config: RuleConfig = {
   bright: { allowMultiple: false },
-  animal: { sakeCupMode: "ANIMAL_ONLY" },
+  animal: { countSakeCup: true },
   viewing: { weatherDependent: true },
 }
 ```
@@ -86,9 +92,10 @@ See [Rules Documentation](./rules/README.md) for current variant support status.
 
 ### Basic Scoring
 
-```javascript
-import { createScoringManager, KOIKOI_RULES } from "./scoring/manager.js"
-import { createCollection } from "../core/collection.js"
+```typescript
+import { createScoringManager, KOIKOI_RULES } from "./scoring/manager"
+import { createCollection } from "../core/collection"
+import type { YakuResult } from "./rules/types"
 
 // Create scoring manager
 const scoring = createScoringManager(KOIKOI_RULES)
@@ -98,22 +105,24 @@ const collection = createCollection()
 collection.addMany([0, 8, 28]) // Three brights
 
 // Score collection
-const results = scoring(collection)
+const results: YakuResult[] = scoring(collection)
 console.log(results)
 // [{ name: "sankou", points: 6 }]
 ```
 
 ### Custom Rules
 
-```javascript
+```typescript
+import type { RuleConfig } from "./rules/types"
+
 // Create custom rule set
-const customRules = {
+const customRules: RuleConfig = {
   bright: {
     allowMultiple: true,
   },
   viewing: {
     weatherDependent: false,
-    seasonDependent: true,
+    seasonalBonus: true,
   },
 }
 
@@ -123,11 +132,13 @@ const scoring = createScoringManager(customRules)
 
 ### Initial Hand Scoring
 
-```javascript
+```typescript
+import type { ScoringContext, YakuResult } from "./rules/types"
+
 // Check for teyaku (hand yaku)
-const results = scoring(collection, {
+const results: YakuResult[] = scoring(collection, {
   checkTeyaku: true,
-})
+} as ScoringContext)
 // [{ name: "teshi", points: 6 }]
 ```
 

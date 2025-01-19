@@ -1,4 +1,4 @@
-import { defineYaku } from "../base.js"
+import { defineYaku } from "../base.ts"
 
 // Month Cards (月札)
 export const TSUKI_FUDA = defineYaku({
@@ -8,7 +8,7 @@ export const TSUKI_FUDA = defineYaku({
   pattern: {
     // Note: The actual month to match will be provided via context
     cards: [
-      { month: null, count: 4 }, // month will be set by the rules checker
+      { month: undefined, count: 4 }, // month will be set by the rules checker
     ],
   },
 })

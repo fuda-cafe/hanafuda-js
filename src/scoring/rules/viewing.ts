@@ -1,8 +1,7 @@
-import { HANAMI, TSUKIMI } from "../yaku/standard/viewing.js"
-
-/**
- * @typedef {import('./types.js').ViewingRules} ViewingRules
- */
+import { HANAMI, TSUKIMI } from "../yaku/standard/viewing.ts"
+import type { ViewingRules, ScoringContext, YakuResult, ScoringManager } from "../types.ts"
+import type { YakuName } from "../yaku/types.ts"
+import { Collection } from "../../core/types.ts"
 
 /**
  * Check if a viewing yaku is in its appropriate season
@@ -10,7 +9,7 @@ import { HANAMI, TSUKIMI } from "../yaku/standard/viewing.js"
  * @param {number} month
  * @returns {boolean}
  */
-const isInSeason = (yakuName, month) => {
+const isInSeason = (yakuName: YakuName, month: number): boolean => {
   return (
     (yakuName === "hanami-zake" && month === 3) || // Cherry Blossom season
     (yakuName === "tsukimi-zake" && month === 8) // Moon Viewing season
@@ -22,7 +21,7 @@ const isInSeason = (yakuName, month) => {
  * @param {Array<{name: string}>} completedYaku
  * @returns {boolean}
  */
-const hasNonViewingYaku = (completedYaku) => {
+const hasNonViewingYaku = (completedYaku: { name: YakuName }[]): boolean => {
   return completedYaku.some((yaku) => yaku.name !== "hanami-zake" && yaku.name !== "tsukimi-zake")
 }
 
@@ -33,7 +32,12 @@ const hasNonViewingYaku = (completedYaku) => {
  * @param {Object} context
  * @param {ViewingRules} rules
  */
-const applyViewingRules = (yakuName, basePoints, context, rules) => {
+const applyViewingRules = (
+  yakuName: YakuName,
+  basePoints: number,
+  context: ScoringContext,
+  rules: ViewingRules
+): number => {
   let points = basePoints
 
   // Early return if viewing yaku are disabled
@@ -79,7 +83,7 @@ const applyViewingRules = (yakuName, basePoints, context, rules) => {
  * Create a custom viewing yaku checker with specific rules
  * @param {ViewingRules} [rules={}]
  */
-export const createViewingChecker = (rules = {}) => {
+export const createViewingChecker = (rules: ViewingRules = {}): ScoringManager => {
   const {
     mode = "ALWAYS",
     weatherDependent = false,
@@ -87,8 +91,8 @@ export const createViewingChecker = (rules = {}) => {
     seasonalOnly = false,
   } = rules
 
-  return (collection, context = null) => {
-    const completed = []
+  return (collection: Collection, context: ScoringContext = {}): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     // Early return if viewing yaku are disabled
     if (mode === "NEVER") {

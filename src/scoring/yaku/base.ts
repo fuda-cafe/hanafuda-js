@@ -1,18 +1,15 @@
-/**
- * @typedef {import('./types.js').YakuName} YakuName
- * @typedef {import('./types.js').YakuDefinition} YakuDefinition
- * @typedef {import('./types.js').CardPattern} CardPattern
- */
+import { getCard } from "../../core/cards.ts"
+import type { Collection } from "../../core/types.ts"
+import type { CardPattern, YakuDefinition } from "./types.ts"
 
-import { getCard } from "../../core/cards.js"
+type YakuInstance = YakuDefinition & {
+  check: (collection: Collection) => number
+}
 
 /**
  * Check if a card matches a pattern
- * @param {number} cardIndex
- * @param {CardPattern} pattern
- * @returns {boolean}
  */
-const matchesPattern = (cardIndex, pattern) => {
+const matchesPattern = (cardIndex: number, pattern: CardPattern): boolean => {
   const card = getCard(cardIndex)
   if (!card) return false
 
@@ -26,12 +23,9 @@ const matchesPattern = (cardIndex, pattern) => {
 
 /**
  * Find all cards in a collection that match a pattern
- * @param {import('../../core/collection.js').CardCollection} collection
- * @param {CardPattern} pattern
- * @returns {number[]}
  */
-const findMatches = (collection, pattern) => {
-  const matches = []
+const findMatches = (collection: Collection, pattern: CardPattern): number[] => {
+  const matches: number[] = []
   for (const cardIndex of collection) {
     if (matchesPattern(cardIndex, pattern)) {
       matches.push(cardIndex)
@@ -42,10 +36,8 @@ const findMatches = (collection, pattern) => {
 
 /**
  * Create a new yaku definition
- * @param {YakuDefinition} definition
- * @returns {YakuDefinition & { check: (collection: import('../../core/collection.js').Collection) => number }}
  */
-export const defineYaku = (definition) => {
+export const defineYaku = (definition: YakuDefinition): YakuInstance => {
   // Validate the definition
   if (!definition.name || !definition.description || !definition.points || !definition.pattern) {
     throw new Error("Invalid yaku definition")
@@ -55,10 +47,9 @@ export const defineYaku = (definition) => {
     ...definition,
     /**
      * Check if the yaku pattern is matched in the given collection
-     * @param {import('../../core/collection.js').Collection} collection
-     * @returns {number} Base points earned (0 if pattern is not matched)
+     * @returns Base points earned (0 if pattern is not matched)
      */
-    check(collection) {
+    check(collection: Collection): number {
       // Early return if collection is too small
       const minRequired = definition.pattern.cards.reduce(
         (sum, pattern) => sum + (pattern.count || 1),

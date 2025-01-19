@@ -1,17 +1,16 @@
-import { TESHI, KUTTSUKI } from "../yaku/standard/hand.js"
-import { getCard } from "../../core/cards.js"
+import { TESHI, KUTTSUKI } from "../yaku/standard/hand.ts"
+import { getCard } from "../../core/cards.ts"
+import type { Collection } from "../../core/types.ts"
+import type { ScoringContext, ScoringManager, YakuResult } from "../types.ts"
 
 /**
  * Create a hand yaku checker
  */
-export const createHandChecker = () => {
+export const createHandChecker = (): ScoringManager => {
   /**
    * Check hand yaku
-   * @param {import('../../core/types.js').Collection} collection
-   * @param {object} context
-   * @returns {Array<{name: string, points: number}>}
    */
-  return (collection, context = null) => {
+  return (collection: Collection, context: ScoringContext = {}): YakuResult[] => {
     // Only check hand yaku if explicitly requested via context
     if (!context?.checkTeyaku) return []
 
@@ -22,6 +21,8 @@ export const createHandChecker = () => {
     const monthCounts = new Map()
     for (const cardIndex of collection) {
       const card = getCard(cardIndex)
+      if (!card) continue
+
       const month = card.month
       monthCounts.set(month, (monthCounts.get(month) || 0) + 1)
     }

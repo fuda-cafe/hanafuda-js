@@ -8,13 +8,16 @@ This module defines the scoring patterns (役, yaku) used in Hanafuda games. Eac
 
 Card patterns can match by various properties:
 
-```javascript
-{
-  id: "willow-rain-man",     // Match specific card
-  type: CardType.BRIGHT,     // Match card type
-  flower: FlowerType.PINE,   // Match flower type
-  month: 1,                  // Match month
-  count: 3                   // Required count
+```typescript
+import type { CardPattern } from "../types"
+import { CardType, FlowerType } from "../../core/types"
+
+const pattern: CardPattern = {
+  id: "willow-rain-man", // Match specific card
+  type: CardType.BRIGHT, // Match card type
+  flower: FlowerType.PINE, // Match flower type
+  month: 1, // Match month
+  count: 3, // Required count
 }
 ```
 
@@ -22,14 +25,17 @@ Card patterns can match by various properties:
 
 Patterns can combine multiple requirements:
 
-```javascript
-{
+```typescript
+import type { YakuDefinition } from "../types"
+import { CardType } from "../../core/types"
+
+const yaku: YakuDefinition = {
   pattern: {
     cards: [
       { id: "willow-rain-man" }, // Specific card
       { type: CardType.BRIGHT, count: 3 }, // Multiple cards
-    ]
-  }
+    ],
+  },
 }
 ```
 
@@ -79,11 +85,12 @@ Patterns can combine multiple requirements:
 
 ### Defining New Yaku
 
-```javascript
-import { defineYaku } from "../base.js"
-import { CardType } from "../../../core/cards.js"
+```typescript
+import { defineYaku } from "../base"
+import { CardType, FlowerType } from "../../../core/types"
+import type { YakuDefinition } from "../types"
 
-export const CUSTOM_YAKU = defineYaku({
+export const CUSTOM_YAKU: YakuDefinition = defineYaku({
   name: "custom-yaku",
   description: ["Custom Yaku"],
   points: 5,
@@ -109,8 +116,10 @@ The pattern system validates yaku definitions:
 
 Patterns can specify rule dependencies:
 
-```javascript
-{
+```typescript
+import type { YakuDefinition } from "../types"
+
+const weatherYaku: YakuDefinition = {
   pattern: {
     cards: [...],
     rules: {

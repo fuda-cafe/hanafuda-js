@@ -1,19 +1,16 @@
-import { AKA_TAN, AO_TAN, TAN } from "../yaku/standard/ribbon.js"
-import { CardType } from "../../core/cards.js"
-
-/**
- * @typedef {import('./types.js').RibbonRules} RibbonRules
- */
+import { AKA_TAN, AO_TAN, TAN } from "../yaku/standard/ribbon.ts"
+import { CardType } from "../../core/cards.ts"
+import type { RibbonRules, ScoringManager, YakuResult } from "../types.ts"
+import type { Collection } from "../../core/types.ts"
 
 /**
  * Create a custom ribbon yaku checker with specific rules
- * @param {RibbonRules} [rules={}]
  */
-export const createRibbonChecker = (rules = {}) => {
+export const createRibbonChecker = (rules: RibbonRules = {}): ScoringManager => {
   const { allowMultiple = true, extraPoints = 1 } = rules
 
-  return (collection) => {
-    const completed = []
+  return (collection: Collection): YakuResult[] => {
+    const completed: YakuResult[] = []
 
     // Check Poetry Ribbons (aka-tan)
     const akaTanPoints = AKA_TAN.check(collection)
