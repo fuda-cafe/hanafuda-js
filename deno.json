@@ -1,9 +1,8 @@
 {
   "name": "@fudapop/hanafuda-js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A modular JavaScript library for implementing Hanafuda card games, with a focus on Koi-Koi.",
   "tasks": {
-    "dev": "deno run --allow-read --allow-net --watch-hmr main.js",
     "test": "deno test"
   },
   "compilerOptions": {
@@ -19,6 +18,6 @@
     "./koikoi": "./src/koikoi/index.ts"
   },
   "publish": {
-    "exclude": ["**/README.md", "src/example/", "tests/"]
+    "exclude": ["**/README.md", "tests/"]
   }
 }
