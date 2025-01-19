@@ -1,2 +1,2 @@
-export * from "./standard"
+export * from "./standard/index.js"
 export * from "./base.js"
