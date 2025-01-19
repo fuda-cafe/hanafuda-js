@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A modular JavaScript library for implementing Hanafuda card games, with a focus on Koi-Koi.",
   "tasks": {
-    "dev": "deno run --watch main.js",
+    "dev": "deno run --allow-read --allow-net --watch-hmr main.js",
     "test": "deno test"
   },
   "compilerOptions": {
