@@ -29,7 +29,7 @@ hanafuda-js/
 
 ```bash
 # Clone the repository
-git clone https://github.com/fuda-cafe/hanafuda-js.git
+git clone https://github.com/fudapop/hanafuda-js.git
 
 # Navigate to the project directory
 cd hanafuda-js

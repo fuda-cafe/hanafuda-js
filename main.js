@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
-import { serveDir } from "https://deno.land/std@0.208.0/http/file_server.ts"
+import { serveDir } from "jsr:@std/http/file-server"
 
 const port = 8000
 const handler = async (req) => {
@@ -15,4 +14,4 @@ const handler = async (req) => {
 }
 
 console.log(`HTTP server running at http://localhost:${port}/example/`)
-await serve(handler, { port })
+await Deno.serve(handler, { port })

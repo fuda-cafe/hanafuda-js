@@ -1,4 +1,5 @@
-import { KoiKoi } from "../game/koikoi.js"
+import { createKoiKoiGame } from "../game/koikoi.js"
+import { createGameState } from "../game/state.js"
 import { getCard } from "../core/cards.js"
 
 // DOM Elements
@@ -28,13 +29,14 @@ const handleCardSelect = (event) => {
   const cardIndex = parseInt(cardElement.dataset.cardIndex)
   const container = cardElement.closest("[id]")
   const containerId = container.id
+  console.log(game.getState().toJSON())
 
   let result
-  if (containerId === `player${game.getState().currentPlayer === "player1" ? "1" : "2"}Hand`) {
+  if (containerId === `player${game.getCurrentPlayer() === "player1" ? "1" : "2"}Hand`) {
     // Handle hand card selection
     result = game.selectCard(cardIndex, "hand")
     if (result.type === "NO_MATCHES") {
-      alert("No matches available - this card will be discarded")
+      // alert("No matches available - this card will be discarded")
     } else if (result.type === "ERROR") {
       alert(result.message)
       return
@@ -46,7 +48,7 @@ const handleCardSelect = (event) => {
   ) {
     // Handle field card selection
     result = game.selectCard(cardIndex, "field")
-    if (result.type === "MATCH_INVALID") {
+    if (result.type === "ERROR") {
       alert(result.message)
       return
     }
@@ -61,7 +63,6 @@ const updatePlayButton = () => {
   if (!playButton) return
 
   const state = game.getState()
-  console.log("updatePlayButton", state)
   const canPlay =
     (state.phase === "WAITING_FOR_FIELD_CARDS" &&
       state.selectedHandCard !== null &&
@@ -88,8 +89,11 @@ const handlePlay = () => {
 
   if (state.phase === "NO_MATCHES_DISCARD") {
     result = game.placeSelectedCard()
-  } else {
-    result = game.playCards()
+  } else if (
+    state.phase === "WAITING_FOR_FIELD_CARDS" ||
+    state.phase === "WAITING_FOR_DECK_MATCH"
+  ) {
+    result = game.captureCards()
   }
 
   handleGameResult(result)
@@ -99,10 +103,8 @@ const handleGameResult = (result) => {
   switch (result.type) {
     case "DECK_DRAW":
       if (result.data.hasMatches) {
-        // Must select matching cards
         alert("Select matching cards from the field")
       } else {
-        // Card was automatically placed
         alert(`Card was placed on the field`)
       }
       break
@@ -140,8 +142,8 @@ const handleKoiKoiDecision = (chooseKoiKoi) => {
 }
 
 const handleNewGame = () => {
-  game = new KoiKoi()
-  const { teyaku } = game.startRound()
+  game = createKoiKoiGame()
+  const { state, teyaku } = game.startRound()
 
   // Display any teyaku
   if (Object.keys(teyaku).length > 0) {
@@ -160,7 +162,8 @@ const handleNewGame = () => {
 const handleSaveGame = () => {
   if (!game) return
 
-  localStorage.setItem("hanafudaGameState", JSON.stringify(game.getState()))
+  const state = game.getState()
+  localStorage.setItem("hanafudaGameState", JSON.stringify(state))
   alert("Game saved successfully!")
 }
 
@@ -172,8 +175,17 @@ const handleLoadGame = () => {
   }
 
   try {
-    game = new KoiKoi()
-    // TODO: Implement proper state loading in KoiKoi class
+    game = createKoiKoiGame({ debug: true })
+    const state = createGameState(["player1", "player2"], {
+      fromJSON: savedState,
+      debug: true,
+    })
+    const result = game.loadState(state)
+
+    if (result.type === "ERROR") {
+      throw new Error(result.message)
+    }
+
     alert("Game loaded successfully!")
     renderGameState()
     updatePlayButton()
@@ -186,18 +198,52 @@ const handleLoadGame = () => {
 const createCardElement = (cardIndex) => {
   const card = document.createElement("div")
   card.className =
-    "bg-white border rounded p-2 text-center hover:bg-gray-50 cursor-pointer transition-all"
+    "bg-white border rounded p-2 text-center hover:bg-gray-50 cursor-pointer transition-all relative w-24 h-40 flex flex-col items-center justify-center"
 
   const cardData = getCard(cardIndex)
-  const cardName = `${cardData.flower} (${cardData.type})`
-  card.textContent = cardName
 
-  // Add data attributes for card info
+  // Create a container for the card name that wraps properly
+  const nameContainer = document.createElement("div")
+  nameContainer.className = "text-sm leading-tight px-1"
+  nameContainer.textContent = `${cardData.flower} (${cardData.type})`
+  card.appendChild(nameContainer)
+
+  // Add month badge
+  const monthBadge = document.createElement("div")
+  monthBadge.className =
+    "absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-800 text-white text-xs flex items-center justify-center font-bold shadow-sm"
+  monthBadge.textContent = cardData.month
+  card.appendChild(monthBadge)
+
   card.dataset.cardIndex = cardIndex
   card.dataset.month = cardData.month
   card.dataset.type = cardData.type
 
-  // Add selection state if applicable
+  switch (cardData.type) {
+    case "bright":
+      card.classList.add("bg-yellow-50")
+      monthBadge.classList.remove("bg-gray-800")
+      monthBadge.classList.add("bg-yellow-500")
+      break
+    case "ribbon":
+      card.classList.add("bg-blue-50")
+      monthBadge.classList.remove("bg-gray-800")
+      monthBadge.classList.add("bg-blue-500")
+      break
+    case "animal":
+      card.classList.add("bg-green-50")
+      monthBadge.classList.remove("bg-gray-800")
+      monthBadge.classList.add("bg-green-500")
+      break
+    case "chaff":
+      card.classList.add("bg-red-50")
+      monthBadge.classList.remove("bg-gray-800")
+      monthBadge.classList.add("bg-red-500")
+      break
+    default:
+    // Default case
+  }
+
   const state = game.getState()
   if (cardIndex === state.selectedHandCard || cardIndex === state.drawnCard) {
     card.classList.add("ring-2", "ring-blue-500")
@@ -210,8 +256,7 @@ const createCardElement = (cardIndex) => {
 
 const renderCollection = (collection, container) => {
   container.innerHTML = ""
-  const cards = Array.from(collection)
-  cards.forEach((cardIndex) => {
+  Array.from(collection).forEach((cardIndex) => {
     container.appendChild(createCardElement(cardIndex))
   })
 }
@@ -224,16 +269,41 @@ const renderGameState = () => {
   renderCollection(state.field, elements.fieldCards)
 
   // Update player hands and captured cards
-  renderCollection(state.players["player1"].hand, elements.player1Hand)
-  renderCollection(state.players["player1"].captured, elements.player1Captured)
-  renderCollection(state.players["player2"].hand, elements.player2Hand)
-  renderCollection(state.players["player2"].captured, elements.player2Captured)
+  renderCollection(state.players.player1.hand, elements.player1Hand)
+  renderCollection(state.players.player1.captured, elements.player1Captured)
+  renderCollection(state.players.player2.hand, elements.player2Hand)
+  renderCollection(state.players.player2.captured, elements.player2Captured)
 
   // Update game info
-  const currentPlayerNum = state.currentPlayer === "player1" ? "1" : "2"
+  const currentPlayerNum = game.getCurrentPlayer() === "player1" ? "1" : "2"
   elements.currentPlayer.textContent = `Player ${currentPlayerNum}'s Turn (${state.phase})`
   elements.currentMonth.textContent = `Month: ${state.currentMonth}`
   elements.weather.textContent = `Weather: ${state.weather || "Normal"}`
+
+  // Add player indicators
+  elements.player1Hand.classList.toggle("relative", true)
+  elements.player2Hand.classList.toggle("relative", true)
+
+  // Remove existing border highlights
+  elements.player1Hand.classList.remove("border-l", "border-purple-500")
+  elements.player2Hand.classList.remove("border-r", "border-purple-500")
+
+  // Add arrow indicator for current player
+  const indicator = document.createElement("div")
+  indicator.className = "absolute -left-8 top-1/2 -translate-y-1/2 text-2xl text-purple-500"
+  indicator.textContent = "➤"
+
+  // Remove any existing indicators
+  const oldIndicator = document.querySelector(".player-indicator")
+  if (oldIndicator) oldIndicator.remove()
+
+  // Add indicator to current player's hand
+  indicator.classList.add("player-indicator")
+  if (game.getCurrentPlayer() === "player1") {
+    elements.player1Hand.appendChild(indicator)
+  } else {
+    elements.player2Hand.appendChild(indicator)
+  }
 
   // Update completed yaku
   elements.completedYaku.innerHTML = ""
