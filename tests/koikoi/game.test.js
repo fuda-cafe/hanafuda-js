@@ -1,5 +1,5 @@
 import { assertEquals, assertNotEquals } from "@std/assert"
-import { createKoiKoiGame } from "../../src/game/koikoi.js"
+import { createKoiKoiGame } from "../../src/koikoi/game.js"
 
 Deno.test("KoiKoi - Game Initialization", () => {
   const game = createKoiKoiGame()

@@ -1,11 +1,6 @@
 import { assertEquals, assertNotEquals } from "@std/assert"
-import { createGameState } from "../../src/game/state.js"
-import {
-  determineFirstPlayer,
-  dealInitialCards,
-  checkInitialTeyaku,
-  initializeRound,
-} from "../../src/game/setup.js"
+import { createGameState } from "../../src/koikoi/state.js"
+import { determineFirstPlayer, dealInitialCards, initializeRound } from "../../src/koikoi/setup.js"
 
 const TEST_PLAYERS = ["player1", "player2"]
 

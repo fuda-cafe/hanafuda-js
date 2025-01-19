@@ -1,6 +1,5 @@
-import { createGameState } from "./state.js"
 import { initializeRound } from "./setup.js"
-import { isMatch, hasMatch } from "../core/matching.js"
+import { isMatch } from "../core/matching.js"
 import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.js"
 import { validateGameState } from "./state.js"
 import { isNullish } from "../utils/is-nullish.js"

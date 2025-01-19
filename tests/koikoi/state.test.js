@@ -1,5 +1,5 @@
 import { assertEquals, assertNotEquals, assertThrows } from "@std/assert"
-import { createGameState, validateGameState } from "../../src/game/state.js"
+import { createGameState, validateGameState } from "../../src/koikoi/state.js"
 
 Deno.test("Game State - Creation", async (t) => {
   await t.step("should create initial game state", () => {

@@ -2,17 +2,19 @@
   "name": "@fudapop/hanafuda-js",
   "version": "0.0.1",
   "description": "A modular JavaScript library for implementing Hanafuda card games, with a focus on Koi-Koi.",
-  "main": "main.js",
-  "scripts": {
-    "dev": "deno run --watch main.js"
+  "tasks": {
+    "dev": "deno run --watch main.js",
+    "test": "deno test"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
   },
   "exports": {
-    ".": "./src/",
-    "./core": "./src/core/",
-    "./scoring": "./src/scoring/",
-    "./game": "./src/game/"
+    ".": "./src/koikoi/index.js",
+    "./core": "./src/core/index.js",
+    "./scoring": "./src/scoring/index.js"
+  },
+  "publish": {
+    "exclude": ["**/README.md", "src/example/", "tests/"]
   }
 }

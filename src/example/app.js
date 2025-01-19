@@ -1,5 +1,5 @@
-import { createKoiKoiGame } from "../game/koikoi.js"
-import { createGameState } from "../game/state.js"
+import { createKoiKoiGame } from "../koikoi/game.js"
+import { createGameState } from "../koikoi/state.js"
 import { getCard } from "../core/cards.js"
 
 // DOM Elements

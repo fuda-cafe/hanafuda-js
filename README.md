@@ -17,7 +17,7 @@ A modular JavaScript library for implementing Hanafuda card games, with a focus 
 hanafuda-js/
 ├── src/
 │   ├── core/           # Core game mechanics (cards, matching, collections)
-│   ├── game/           # Game state management and main game loop
+│   ├── koikoi/           # Game state management and main game loop
 │   ├── scoring/        # Yaku scoring system and rules
 │   └── example/        # Web application example
 ├── tests/              # Test suites
@@ -43,7 +43,7 @@ npm install
 ### Basic Game Setup
 
 ```javascript
-import { KoiKoi } from "./src/game/koikoi.js"
+import { KoiKoi } from "./src/koikoi/koikoi.js"
 
 // Create a new game instance
 const game = new KoiKoi()
@@ -159,7 +159,7 @@ http://localhost:8000/example/
 
 ## Development
 
-See the [Game Module README](src/game/README.md) for detailed documentation of the game engine.
+See the [Game Module README](src/koikoi/README.md) for detailed documentation of the game engine.
 
 ## License
 

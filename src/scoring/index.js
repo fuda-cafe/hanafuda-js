@@ -1,3 +1,3 @@
 export * from "./rules"
-export * from "./yaku"
+export * from "./yaku/index.js"
 export * from "./manager.js"

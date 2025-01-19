@@ -9,7 +9,7 @@ The game module provides the core game mechanics for Hanafuda Koi-Koi, managing 
 Defines and manages the game state structure:
 
 ```javascript
-import { createGameState } from "./game/state.js"
+import { createGameState } from "./koikoi/state.js"
 
 // Create a new game state
 const state = createGameState(["player1", "player2"], {
@@ -32,7 +32,7 @@ The game state includes:
 Handles initialization and setup of game rounds:
 
 ```javascript
-import { initializeRound, dealInitialCards } from "./game/setup.js"
+import { initializeRound, dealInitialCards } from "./koikoi/setup.js"
 
 // Initialize a new round
 const { state, teyaku } = initializeRound(["player1", "player2"])
@@ -55,7 +55,7 @@ Key functions:
 Enables saving and loading game state:
 
 ```javascript
-import { serializeGameState, deserializeGameState } from "./game/serialization.js"
+import { serializeGameState, deserializeGameState } from "./koikoi/serialization.js"
 
 // Save game state
 const serialized = serializeGameState(gameState)
@@ -129,8 +129,8 @@ interface SerializedGameState {
 ### Complete Game Setup
 
 ```javascript
-import { initializeRound } from "./game/setup.js"
-import { serializeGameState } from "./game/serialization.js"
+import { initializeRound } from "./koikoi/setup.js"
+import { serializeGameState } from "./koikoi/serialization.js"
 
 // Start new game
 const players = ["player1", "player2"]
@@ -152,7 +152,7 @@ saveToStorage(serialized)
 ### Loading Saved Game
 
 ```javascript
-import { deserializeGameState, validateSerializedState } from "./game/serialization.js"
+import { deserializeGameState, validateSerializedState } from "./koikoi/serialization.js"
 
 function loadGame(savedState) {
   // Validate saved state
