@@ -38,11 +38,13 @@ export interface Deck extends Iterable<number> {
  * @throws {InvalidCardError} If any card index is invalid
  * @throws {SyntaxError} If JSON string is invalid
  */
-export const createDeck = (options: {
-  shuffled?: boolean
-  cards?: number[]
-  fromJSON?: string
-}): Deck => {
+export const createDeck = (
+  options: {
+    shuffled?: boolean
+    cards?: number[]
+    fromJSON?: string
+  } = {}
+): Deck => {
   const { shuffled = true, cards = Array.from({ length: 48 }, (_, i) => i), fromJSON } = options
 
   // If JSON string provided, parse it and use those cards

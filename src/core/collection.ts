@@ -29,8 +29,10 @@ export interface Collection extends Iterable<number> {
  * collection.add(3)
  * collection.has(1) // true
  */
-export const createCollection = (options: { cards?: number[]; fromJSON?: string }): Collection => {
-  const { cards = [], fromJSON } = options ?? {}
+export const createCollection = (
+  options: { cards?: number[]; fromJSON?: string } = {}
+): Collection => {
+  const { cards = [], fromJSON } = options
 
   // If JSON string provided, parse it and use those cards
   const initialCards: number[] = fromJSON ? JSON.parse(fromJSON) : cards
