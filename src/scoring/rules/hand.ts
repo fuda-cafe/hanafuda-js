@@ -46,4 +46,4 @@ export const createHandChecker = (): ScoringManager => {
 /**
  * Default hand yaku checker
  */
-export const checkHandYaku = createHandChecker()
+export const checkHandYaku: ScoringManager = createHandChecker()

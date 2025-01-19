@@ -1,10 +1,6 @@
 import { getCard } from "../../core/cards.ts"
 import type { Collection } from "../../core/types.ts"
-import type { CardPattern, YakuDefinition } from "./types.ts"
-
-type YakuInstance = YakuDefinition & {
-  check: (collection: Collection) => number
-}
+import type { CardPattern, YakuDefinition, YakuInstance } from "./types.ts"
 
 /**
  * Check if a card matches a pattern

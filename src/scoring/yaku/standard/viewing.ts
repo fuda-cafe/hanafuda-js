@@ -1,7 +1,8 @@
 import { defineYaku } from "../base.ts"
+import type { YakuInstance } from "../types.ts"
 
 // Flower Viewing (花見酒)
-export const HANAMI = defineYaku({
+export const HANAMI: YakuInstance = defineYaku({
   name: "hanami-zake",
   description: ["Flower Viewing"],
   points: 3,
@@ -14,7 +15,7 @@ export const HANAMI = defineYaku({
 })
 
 // Moon Viewing (月見酒)
-export const TSUKIMI = defineYaku({
+export const TSUKIMI: YakuInstance = defineYaku({
   name: "tsukimi-zake",
   description: ["Moon Viewing"],
   points: 3,

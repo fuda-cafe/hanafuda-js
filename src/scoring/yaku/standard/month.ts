@@ -1,7 +1,8 @@
 import { defineYaku } from "../base.ts"
+import type { YakuInstance } from "../types.ts"
 
 // Month Cards (月札)
-export const TSUKI_FUDA = defineYaku({
+export const TSUKI_FUDA: YakuInstance = defineYaku({
   name: "tsuki-fuda",
   description: ["Four Cards of the Same Month"],
   points: 4,

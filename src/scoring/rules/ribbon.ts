@@ -46,4 +46,4 @@ export const createRibbonChecker = (rules: RibbonRules = {}): ScoringManager => 
 /**
  * Default ribbon yaku checker (allows multiple scoring, 1 extra point per additional ribbon)
  */
-export const checkRibbonYaku = createRibbonChecker()
+export const checkRibbonYaku: ScoringManager = createRibbonChecker()

@@ -124,4 +124,4 @@ export const createViewingChecker = (rules: ViewingRules = {}): ScoringManager =
 /**
  * Default viewing yaku checker (no special rules)
  */
-export const checkViewingYaku = createViewingChecker()
+export const checkViewingYaku: ScoringManager = createViewingChecker()

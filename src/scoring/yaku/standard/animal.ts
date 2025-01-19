@@ -1,8 +1,9 @@
 import { defineYaku } from "../base.ts"
 import { CardType } from "../../../core/cards.ts"
+import type { YakuInstance } from "../types.ts"
 
 // Boar-Deer-Butterfly (猪鹿蝶)
-export const INO_SHIKA_CHOU = defineYaku({
+export const INO_SHIKA_CHOU: YakuInstance = defineYaku({
   name: "ino-shika-chou",
   description: ["Boar, Deer, and Butterfly"],
   points: 5,
@@ -16,7 +17,7 @@ export const INO_SHIKA_CHOU = defineYaku({
 })
 
 // Animals (タネ)
-export const TANE = defineYaku({
+export const TANE: YakuInstance = defineYaku({
   name: "tane-zaku",
   description: ["Five Animals"],
   points: 1,

@@ -1,8 +1,9 @@
 import { defineYaku } from "../base.ts"
 import { CardType } from "../../../core/cards.ts"
+import type { YakuInstance } from "../types.ts"
 
 // Five Brights (御光)
-export const GOKOU = defineYaku({
+export const GOKOU: YakuInstance = defineYaku({
   name: "gokou",
   description: ["Five Brights"],
   points: 15,
@@ -12,7 +13,7 @@ export const GOKOU = defineYaku({
 })
 
 // Four Brights (四光)
-export const SHIKOU = defineYaku({
+export const SHIKOU: YakuInstance = defineYaku({
   name: "shikou",
   description: ["Four Brights"],
   points: 8,
@@ -22,7 +23,7 @@ export const SHIKOU = defineYaku({
 })
 
 // Rain-man Four (雨四光)
-export const AME_SHIKOU = defineYaku({
+export const AME_SHIKOU: YakuInstance = defineYaku({
   name: "ame-shikou",
   description: ["Rain-man Four"],
   points: 7,
@@ -32,7 +33,7 @@ export const AME_SHIKOU = defineYaku({
 })
 
 // Three Brights (三光)
-export const SANKOU = defineYaku({
+export const SANKOU: YakuInstance = defineYaku({
   name: "sankou",
   description: ["Three Brights"],
   points: 6,

@@ -43,4 +43,4 @@ export const createChaffChecker = (rules: ChaffRules = {}): ScoringManager => {
 /**
  * Default chaff yaku checker (1 extra point per chaff beyond 10)
  */
-export const checkChaffYaku = createChaffChecker()
+export const checkChaffYaku: ScoringManager = createChaffChecker()

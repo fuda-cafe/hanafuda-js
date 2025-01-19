@@ -1,12 +1,12 @@
-export const CardType = Object.freeze({
+export const CardType = {
   CHAFF: "chaff",
   ANIMAL: "animal",
   RIBBON: "ribbon",
   BRIGHT: "bright",
-})
+} as const
 export type CardType = (typeof CardType)[keyof typeof CardType]
 
-export const FlowerType = Object.freeze({
+export const FlowerType = {
   PINE: "pine",
   PLUM: "plum",
   CHERRY: "cherry",
@@ -19,12 +19,12 @@ export const FlowerType = Object.freeze({
   MAPLE: "maple",
   WILLOW: "willow",
   PAULOWNIA: "paulownia",
-})
+} as const
 export type FlowerType = (typeof FlowerType)[keyof typeof FlowerType]
 
 const CARDS_LENGTH = 48
 
-const CARD_DATA: readonly [string, CardType, FlowerType, number][] = Object.freeze([
+const CARD_DATA: ReadonlyArray<[string, CardType, FlowerType, number]> = Object.freeze([
   // January - Pine (Matsu)
   ["crane", CardType.BRIGHT, FlowerType.PINE, 1], // 0
   ["poetry-ribbon", CardType.RIBBON, FlowerType.PINE, 1], // 1
@@ -106,8 +106,7 @@ export type Card = {
   month: number
 }
 
-/** @type {ReadonlyArray<Card>} */
-export const CARDS = Object.freeze(
+export const CARDS: ReadonlyArray<Card> = Object.freeze(
   Array.from({ length: CARDS_LENGTH }, (_, index) => {
     const [name, type, flower, month] = CARD_DATA[index]
     return Object.freeze({
@@ -121,16 +120,16 @@ export const CARDS = Object.freeze(
 )
 
 // Commonly referenced card indices
-export const BRIGHT_INDICES = Object.freeze([0, 8, 28, 40, 44])
-export const POETRY_RIBBON_INDICES = Object.freeze([1, 5, 9])
-export const BLUE_RIBBON_INDICES = Object.freeze([21, 33, 37])
-export const RED_RIBBON_INDICES = Object.freeze([13, 17, 25, 42])
-export const ANIMAL_INDICES = Object.freeze([4, 12, 16, 20, 24, 29, 32, 36, 41])
+export const BRIGHT_INDICES: ReadonlyArray<number> = Object.freeze([0, 8, 28, 40, 44])
+export const POETRY_RIBBON_INDICES: ReadonlyArray<number> = Object.freeze([1, 5, 9])
+export const BLUE_RIBBON_INDICES: ReadonlyArray<number> = Object.freeze([21, 33, 37])
+export const RED_RIBBON_INDICES: ReadonlyArray<number> = Object.freeze([13, 17, 25, 42])
+export const ANIMAL_INDICES: ReadonlyArray<number> = Object.freeze([
+  4, 12, 16, 20, 24, 29, 32, 36, 41,
+])
 
 /**
  * Get card data by index
- * @param {number} index
- * @returns {Card|null}
  */
 export const getCard = (index: number): Card | null => {
   if (index < 0 || index >= CARDS_LENGTH) return null
@@ -139,8 +138,6 @@ export const getCard = (index: number): Card | null => {
 
 /**
  * Get multiple cards by indices
- * @param {Array<number>} indices
- * @returns {Array<Card>}
  */
 export const getCards = (indices: number[]): Card[] => {
   return indices.map(getCard).filter((card) => card !== null)
@@ -148,8 +145,6 @@ export const getCards = (indices: number[]): Card[] => {
 
 /**
  * Find all cards of a specific type
- * @param {CardType} type
- * @returns {number[]}
  */
 export const findCardIndicesByType = (type: CardType): number[] =>
   CARDS.reduce((indices, card, index) => {
@@ -159,8 +154,6 @@ export const findCardIndicesByType = (type: CardType): number[] =>
 
 /**
  * Find all cards from a specific month
- * @param {number} month
- * @returns {number[]}
  */
 export const findCardIndicesByMonth = (month: number): number[] =>
   CARDS.reduce((indices, card, index) => {
@@ -170,8 +163,6 @@ export const findCardIndicesByMonth = (month: number): number[] =>
 
 /**
  * Check if a value is a valid card index
- * @param {unknown} index Value to check
- * @returns {boolean}
  */
 export const isValidCardIndex = (index: unknown): index is number => {
   return typeof index === "number" && Number.isInteger(index) && index >= 0 && index < CARDS_LENGTH

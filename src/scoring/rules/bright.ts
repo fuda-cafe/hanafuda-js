@@ -47,4 +47,4 @@ export const createBrightChecker = (rules: BrightRules = {}): ScoringManager => 
 /**
  * Default bright yaku checker (no special rules)
  */
-export const checkBrightYaku = createBrightChecker()
+export const checkBrightYaku: ScoringManager = createBrightChecker()

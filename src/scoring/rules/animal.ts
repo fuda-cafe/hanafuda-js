@@ -65,4 +65,4 @@ export const createAnimalChecker = (rules: AnimalRules = {}): ScoringManager => 
 /**
  * Default animal yaku checker (allows multiple scoring, 1 extra point per additional animal)
  */
-export const checkAnimalYaku = createAnimalChecker()
+export const checkAnimalYaku: ScoringManager = createAnimalChecker()

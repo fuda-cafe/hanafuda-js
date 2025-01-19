@@ -62,6 +62,12 @@ export type YakuDefinition = {
   pattern: YakuPattern
 }
 
+/** Instance of a yaku scoring pattern */
+export type YakuInstance = YakuDefinition & {
+  /** Check if the yaku pattern is matched in the given collection */
+  check: (collection: Collection) => number
+}
+
 /** List of completed yaku with their points */
 export type YakuResults = Array<{
   name: YakuName

@@ -54,4 +54,4 @@ export const createMonthChecker = (rules: MonthRules = {}): ScoringManager => {
 /**
  * Default month cards yaku checker (only current month)
  */
-export const checkMonthYaku = createMonthChecker()
+export const checkMonthYaku: ScoringManager = createMonthChecker()
