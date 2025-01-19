@@ -6,7 +6,7 @@ import {
   getCard,
   findCardIndicesByType,
   findCardIndicesByMonth,
-} from "../../src/core/cards.js"
+} from "../../src/core/cards.ts"
 
 Deno.test("Card Types", () => {
   assertEquals(CardType.BRIGHT, "bright")

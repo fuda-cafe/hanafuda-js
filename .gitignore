@@ -2,4 +2,5 @@
 .ai/
 .DS_Store
 .notes/
+.vscode/
 DEVLOG*

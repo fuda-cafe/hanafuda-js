@@ -1,16 +1,10 @@
-/**
- * @typedef {'chaff' | 'animal' | 'ribbon' | 'bright'} CardType
- * @typedef {'pine' | 'plum' | 'cherry' | 'wisteria' | 'iris' | 'peony' |
- *           'bush-clover' | 'susuki' | 'chrysanthemum' | 'maple' | 'willow' |
- *           'paulownia'} FlowerType
- */
-
 export const CardType = Object.freeze({
   CHAFF: "chaff",
   ANIMAL: "animal",
   RIBBON: "ribbon",
   BRIGHT: "bright",
 })
+export type CardType = (typeof CardType)[keyof typeof CardType]
 
 export const FlowerType = Object.freeze({
   PINE: "pine",
@@ -26,20 +20,11 @@ export const FlowerType = Object.freeze({
   WILLOW: "willow",
   PAULOWNIA: "paulownia",
 })
-
-/**
- * @typedef {Object} Card
- * @property {string} id Unique card identifier
- * @property {string} name Display name
- * @property {CardType} type Card type
- * @property {FlowerType} flower Flower type
- * @property {number} month Month number (1-12)
- */
+export type FlowerType = (typeof FlowerType)[keyof typeof FlowerType]
 
 const CARDS_LENGTH = 48
 
-/** @type {ReadonlyArray<[string, CardType, FlowerType, number]>} */
-const CARD_DATA = Object.freeze([
+const CARD_DATA: readonly [string, CardType, FlowerType, number][] = Object.freeze([
   // January - Pine (Matsu)
   ["crane", CardType.BRIGHT, FlowerType.PINE, 1], // 0
   ["poetry-ribbon", CardType.RIBBON, FlowerType.PINE, 1], // 1
@@ -113,6 +98,14 @@ const CARD_DATA = Object.freeze([
   ["chaff-3", CardType.CHAFF, FlowerType.PAULOWNIA, 12], // 47
 ])
 
+export type Card = {
+  id: string
+  name: string
+  type: CardType
+  flower: FlowerType
+  month: number
+}
+
 /** @type {ReadonlyArray<Card>} */
 export const CARDS = Object.freeze(
   Array.from({ length: CARDS_LENGTH }, (_, index) => {
@@ -139,7 +132,7 @@ export const ANIMAL_INDICES = Object.freeze([4, 12, 16, 20, 24, 29, 32, 36, 41])
  * @param {number} index
  * @returns {Card|null}
  */
-export const getCard = (index) => {
+export const getCard = (index: number): Card | null => {
   if (index < 0 || index >= CARDS_LENGTH) return null
   return CARDS[index]
 }
@@ -149,8 +142,8 @@ export const getCard = (index) => {
  * @param {Array<number>} indices
  * @returns {Array<Card>}
  */
-export const getCards = (indices) => {
-  return indices.map(getCard).filter(Boolean)
+export const getCards = (indices: number[]): Card[] => {
+  return indices.map(getCard).filter((card) => card !== null)
 }
 
 /**
@@ -158,28 +151,28 @@ export const getCards = (indices) => {
  * @param {CardType} type
  * @returns {number[]}
  */
-export const findCardIndicesByType = (type) =>
+export const findCardIndicesByType = (type: CardType): number[] =>
   CARDS.reduce((indices, card, index) => {
     if (card.type === type) indices.push(index)
     return indices
-  }, [])
+  }, [] as number[])
 
 /**
  * Find all cards from a specific month
  * @param {number} month
  * @returns {number[]}
  */
-export const findCardIndicesByMonth = (month) =>
+export const findCardIndicesByMonth = (month: number): number[] =>
   CARDS.reduce((indices, card, index) => {
     if (card.month === month) indices.push(index)
     return indices
-  }, [])
+  }, [] as number[])
 
 /**
  * Check if a value is a valid card index
  * @param {unknown} index Value to check
  * @returns {boolean}
  */
-export const isValidCardIndex = (index) => {
+export const isValidCardIndex = (index: unknown): index is number => {
   return typeof index === "number" && Number.isInteger(index) && index >= 0 && index < CARDS_LENGTH
 }

@@ -1,6 +1,6 @@
 import { assertEquals, assertNotEquals, assertThrows } from "@std/assert"
-import { createCollection } from "../../src/core/collection.js"
-import { CardType } from "../../src/core/cards.js"
+import { createCollection } from "../../src/core/collection.ts"
+import { CardType } from "../../src/core/cards.ts"
 
 Deno.test("Create Empty Collection", () => {
   const collection = createCollection()

@@ -1,5 +1,5 @@
-import { assertEquals, assertNotEquals, assertThrows, assert } from "@std/assert"
-import { createDeck, createStandardDeck } from "../../src/core/deck.js"
+import { assertEquals, assertThrows, assert } from "@std/assert"
+import { createDeck, createStandardDeck } from "../../src/core/deck.ts"
 
 Deno.test("Create Empty Deck", () => {
   const deck = createDeck({ cards: [] })
@@ -102,7 +102,7 @@ Deno.test("Place Card on Top of Deck", () => {
   assertEquals(deck.cards[deck.size - 1], cardToPlace) // Check if card is on top
 
   // Attempt to place the same card again
-  assertThrows(() => deck.placeOnTop(cardToPlace), Error, `Card ${cardToPlace} already in deck`)
+  assertThrows(() => deck.placeOnTop(cardToPlace), Error, `Card ${cardToPlace} already exists`)
   // Size should remain the same after attempting to add duplicate
   assertEquals(deck.size, initialSize + 1)
   // Card should still be on top
@@ -119,7 +119,7 @@ Deno.test("Place Card on Bottom of Deck", () => {
   assertEquals(deck.cards[0], cardToPlace) // Check if card is at the bottom
 
   // Attempt to place the same card again
-  assertThrows(() => deck.placeOnBottom(cardToPlace), Error, `Card ${cardToPlace} already in deck`)
+  assertThrows(() => deck.placeOnBottom(cardToPlace), Error, `Card ${cardToPlace} already exists`)
   // Size should remain the same after attempting to add duplicate
   assertEquals(deck.size, initialSize + 1)
   // Card should still be at the bottom

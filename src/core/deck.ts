@@ -1,16 +1,10 @@
-/**
- * @typedef {import('./cards.js').Card} Card
- */
-
-import { isValidCardIndex } from "./cards.js"
+import { DuplicateCardError, InvalidCardError, InvalidStateError } from "../errors.ts"
+import { isValidCardIndex } from "./cards.ts"
 
 /**
  * Fisher-Yates shuffle algorithm
- * @template T
- * @param {Array<T>} array Array to shuffle
- * @returns {Array<T>} New shuffled array
  */
-const shuffle = (array) => {
+const shuffle = <T>(array: Array<T>): Array<T> => {
   const result = [...array]
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
@@ -19,15 +13,20 @@ const shuffle = (array) => {
   return result
 }
 
-/**
- * @typedef {Object} Deck
- * @property {Array<number>} cards Array of card indices
- * @property {() => number|null} draw Draw a card from the deck
- * @property {() => Array<number>} drawMany Draw multiple cards from the deck
- * @property {boolean} isEmpty Check if deck is empty
- * @property {number} size Get number of remaining cards
- * @property {() => void} reset Reset deck to initial state
- */
+export interface Deck extends Iterable<number> {
+  [Symbol.iterator]: () => IterableIterator<number>
+  cards: number[]
+  draw: () => number | null
+  drawMany: (count: number) => number[]
+  placeOnTop: (cardIndex: number) => void
+  placeOnBottom: (cardIndex: number) => void
+  reshuffle: () => void
+  isEmpty: boolean
+  size: number
+  reset: () => void
+  toJSON: () => number[]
+  toString: () => string
+}
 
 /**
  * Create a new deck of cards
@@ -36,10 +35,14 @@ const shuffle = (array) => {
  * @param {Array<number>} [options.cards] Initial cards (indices) to use
  * @param {string} [options.fromJSON] JSON string to initialize from
  * @returns {Readonly<Deck>}
- * @throws {Error} If any card index is invalid
- * @throws {Error} If JSON string is invalid
+ * @throws {InvalidCardError} If any card index is invalid
+ * @throws {SyntaxError} If JSON string is invalid
  */
-export const createDeck = (options = {}) => {
+export const createDeck = (options: {
+  shuffled?: boolean
+  cards?: number[]
+  fromJSON?: string
+}): Deck => {
   const { shuffled = true, cards = Array.from({ length: 48 }, (_, i) => i), fromJSON } = options
 
   // If JSON string provided, parse it and use those cards
@@ -47,84 +50,78 @@ export const createDeck = (options = {}) => {
 
   // If cards are not an array, throw an error
   if (!Array.isArray(initialCards)) {
-    throw new Error(`Invalid cards array from JSON: ${initialCards}`)
+    throw new InvalidStateError(`Invalid cards array from JSON: ${initialCards}`)
   }
 
   // Validate initial cards
   initialCards.forEach((index, i) => {
     if (!isValidCardIndex(index)) {
-      throw new Error(`Invalid card index at position ${i}: ${index}`)
+      throw new InvalidCardError(index)
     }
   })
 
   /**
-   * cardArray
+   * Initialize internal card array
    * @private
-   * @type {Array<number>}
    */
-  let cardArray = shuffled ? shuffle(initialCards) : [...initialCards]
+  let cardArray: number[] = shuffled ? shuffle(initialCards) : [...initialCards]
 
   /**
-   * isValidPlacement
+   * Check if a card can be placed in the deck
    * @private
-   * @param {number} cardIndex
-   * @returns {boolean}
-   * @throws {Error} If card index is invalid
-   * @throws {Error} If card is already in deck
+   * @throws {InvalidCardError} If card index is invalid
+   * @throws {DuplicateCardError} If card is already in deck
    */
-  const isValidPlacement = (cardIndex) => {
+  const isValidPlacement = (cardIndex: number): boolean => {
     if (!isValidCardIndex(cardIndex)) {
-      throw new Error(`Invalid card index: ${cardIndex}`)
+      throw new InvalidCardError(cardIndex)
     }
     if (cardArray.includes(cardIndex)) {
-      throw new Error(`Card ${cardIndex} already in deck`)
+      throw new DuplicateCardError(cardIndex)
     }
     return true
   }
 
-  return Object.freeze({
+  return Object.freeze<Deck>({
     /**
      * Make deck iterable
-     * @returns {Iterator<number>}
      */
-    [Symbol.iterator]() {
+    [Symbol.iterator](): IterableIterator<number> {
       return cardArray[Symbol.iterator]()
     },
 
     /**
      * Current cards in deck
-     * @returns {Array<number>}
      */
-    get cards() {
+    get cards(): number[] {
       return [...cardArray]
     },
 
     /**
      * Draw a single card from the deck
-     * @returns {number|null} Card index or null if deck is empty
+     * @returns Card index or null if deck is empty
      */
-    draw() {
-      return cardArray.length > 0 ? cardArray.pop() : null
+    draw(): number | null {
+      return cardArray.length > 0 ? cardArray.pop()! : null
     },
 
     /**
      * Draw multiple cards from the deck
-     * @param {number} [count=8] Number of cards to draw
-     * @returns {Array<number>} Array of card indices
+     * @param count Number of cards to draw
+     * @returns Array of card indices
      */
-    drawMany(count = 8) {
+    drawMany(count = 8): number[] {
       const drawn = []
       for (let i = 0; i < count && cardArray.length > 0; i++) {
-        drawn.push(cardArray.pop())
+        drawn.push(cardArray.pop()!)
       }
       return drawn
     },
 
     /**
      * Add a card to the deck
-     * @param {number} cardIndex
      */
-    placeOnTop(cardIndex) {
+    placeOnTop(cardIndex: number): void {
       if (isValidPlacement(cardIndex)) {
         cardArray.push(cardIndex)
       }
@@ -132,9 +129,8 @@ export const createDeck = (options = {}) => {
 
     /**
      * Add a card to the deck
-     * @param {number} cardIndex
      */
-    placeOnBottom(cardIndex) {
+    placeOnBottom(cardIndex: number): void {
       if (isValidPlacement(cardIndex)) {
         cardArray.unshift(cardIndex)
       }
@@ -143,44 +139,40 @@ export const createDeck = (options = {}) => {
     /**
      * Reshuffle current deck
      */
-    reshuffle() {
+    reshuffle(): void {
       cardArray = shuffle(cardArray)
     },
 
     /**
      * Check if deck is empty
-     * @returns {boolean}
      */
-    get isEmpty() {
+    get isEmpty(): boolean {
       return cardArray.length === 0
     },
 
     /**
      * Get number of remaining cards
-     * @returns {number}
      */
-    get size() {
+    get size(): number {
       return cardArray.length
     },
 
     /**
      * Reset deck to initial state
      */
-    reset() {
+    reset(): void {
       cardArray = shuffled ? shuffle(cards) : [...cards]
     },
 
     /**
      * Get string representation of deck
-     * @returns {string}
      */
-    toString() {
+    toString(): string {
       return `Deck(${cardArray.join(", ")})`
     },
 
     /**
      * Custom inspection for console.log
-     * @returns {string}
      */
     [Symbol.for("nodejs.util.inspect.custom")]() {
       return this.toString()
@@ -188,9 +180,9 @@ export const createDeck = (options = {}) => {
 
     /**
      * Get JSON representation of deck
-     * @returns {string}
+     * @returns Array of card indices
      */
-    toJSON() {
+    toJSON(): number[] {
       return this.cards
     },
   })
@@ -198,6 +190,6 @@ export const createDeck = (options = {}) => {
 
 /**
  * Create a standard shuffled Hanafuda deck
- * @returns {Readonly<Deck>}
+ * @returns Readonly<Deck>
  */
-export const createStandardDeck = () => createDeck({ shuffled: true })
+export const createStandardDeck = (): Deck => createDeck({ shuffled: true })

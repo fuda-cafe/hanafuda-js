@@ -4,12 +4,12 @@ The core module provides the fundamental building blocks for implementing Hanafu
 
 ## Components
 
-### Cards (`cards.js`)
+### Cards (`cards.ts`)
 
 Defines the basic card types, properties, and utility functions for working with Hanafuda cards.
 
-```javascript
-import { CardType, FlowerType, getCard, findCardIndicesByType } from "./cards.js"
+```typescript
+import { CardType, FlowerType, getCard, findCardIndicesByType } from "./cards"
 
 // Get the Crane card (Pine Bright)
 const crane = getCard(0)
@@ -20,12 +20,12 @@ const brights = findCardIndicesByType(CardType.BRIGHT)
 // [0, 8, 29, 40, 44]
 ```
 
-### Deck (`deck.js`)
+### Deck (`deck.ts`)
 
 Provides functions for creating and manipulating a deck of Hanafuda cards.
 
-```javascript
-import { createDeck, shuffle } from "./deck.js"
+```typescript
+import { createDeck, shuffle } from "./deck"
 
 // Create a new deck (returns array of card indices)
 const deck = createDeck()
@@ -34,12 +34,12 @@ const deck = createDeck()
 shuffle(deck)
 ```
 
-### Collection (`collection.js`)
+### Collection (`collection.ts`)
 
 A factory function for creating collections of cards (e.g., hand, captured cards).
 
-```javascript
-import { createCollection } from "./collection.js"
+```typescript
+import { createCollection } from "./collection"
 
 // Create a new collection
 const hand = createCollection()
@@ -76,12 +76,12 @@ try {
 }
 ```
 
-### Matching (`matching.js`)
+### Matching (`matching.ts`)
 
 Utilities for comparing and matching cards.
 
-```javascript
-import { isMatch, compareCards, hasMatch } from "./matching.js"
+```typescript
+import { isMatch, compareCards, hasMatch } from "./matching"
 
 // Check if two cards match (same month)
 isMatch(0, 1) // true (both Pine cards)
@@ -110,25 +110,37 @@ This provides a memory-efficient way to reference cards while maintaining the ab
 
 ## Type Definitions
 
-The module includes TypeScript-compatible JSDoc type definitions for better development experience:
+The module uses TypeScript for type safety and better development experience:
 
-```javascript
-/** @typedef {'chaff' | 'animal' | 'ribbon' | 'bright'} CardType */
-/** @typedef {'pine' | 'plum' | 'cherry' | ...} FlowerType */
-/**
- * @typedef {Object} Card
- * @property {string} id Unique card identifier
- * @property {string} name Display name
- * @property {CardType} type Card type
- * @property {FlowerType} flower Flower type
- * @property {number} month Month number (1-12)
- */
+```typescript
+export type CardType = "chaff" | "animal" | "ribbon" | "bright"
+export type FlowerType =
+  | "pine"
+  | "plum"
+  | "cherry"
+  | "wisteria"
+  | "iris"
+  | "peony"
+  | "bush-clover"
+  | "susuki"
+  | "chrysanthemum"
+  | "maple"
+  | "willow"
+  | "paulownia"
+
+export type Card = {
+  id: string
+  name: string
+  type: CardType
+  flower: FlowerType
+  month: number
+}
 ```
 
 ## Design Principles
 
-1. **Immutability**: Card definitions and type constants are frozen objects
-2. **Type Safety**: Comprehensive JSDoc type definitions
+1. **Type Safety**: Full TypeScript support with strict type checking
+2. **Immutability**: Card definitions and type constants are frozen objects
 3. **Efficiency**: Card index system for memory efficiency
 4. **Validation**: Built-in validation for card operations
 5. **Iteration**: Collections implement the iterator protocol
