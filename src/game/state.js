@@ -25,7 +25,6 @@ import { createCollection } from "../core/collection.js"
  * @param {number} [options.month] - Starting month (1-12)
  * @param {string} [options.weather] - Weather condition
  * @param {string} [options.fromJSON] - JSON string to initialize from
- * @param {boolean} [options.debug] - Enable debug mode for testing
  * @returns {Readonly<GameState>}
  */
 export function createGameState(playerIds, options = {}) {
@@ -44,36 +43,34 @@ export function createGameState(playerIds, options = {}) {
     }
   }
 
-  let currentPlayer = null
-  let currentMonth = month
-  let completedYaku = []
+  // Create a mutable container for state that needs to change
+  const mutableState = {
+    currentMonth: month,
+    completedYaku: [],
+    currentPlayer: null,
+  }
 
   const state = {
     deck: createDeck(),
     field: createCollection(),
     players,
     get currentMonth() {
-      return currentMonth
+      return mutableState.currentMonth
+    },
+    set currentMonth(newMonth) {
+      if (newMonth >= 1 && newMonth <= 12) {
+        mutableState.currentMonth = newMonth
+      } else {
+        throw new Error(`Invalid month: ${newMonth}`)
+      }
     },
     weather,
     get completedYaku() {
-      return [...completedYaku]
+      return [...mutableState.completedYaku]
     },
-
-    // Debug methods only available in test mode
-    ...(debug && {
-      setMonth(newMonth) {
-        if (newMonth >= 1 && newMonth <= 12) {
-          currentMonth = newMonth
-        } else {
-          throw new Error(`Invalid month: ${newMonth}`)
-        }
-      },
-      setCompletedYaku(yaku) {
-        completedYaku = [...yaku]
-      },
-    }),
-
+    set completedYaku(yaku) {
+      mutableState.completedYaku = [...yaku]
+    },
     toJSON() {
       return {
         deck: this.deck.toJSON(),
@@ -87,16 +84,14 @@ export function createGameState(playerIds, options = {}) {
             },
           ])
         ),
-        currentMonth,
+        currentMonth: mutableState.currentMonth,
         weather: this.weather,
-        completedYaku,
+        completedYaku: mutableState.completedYaku,
       }
     },
-
     toString() {
-      return `GameState(month: ${currentMonth}, player: ${currentPlayer})`
+      return `GameState(month: ${mutableState.currentMonth}, player: ${mutableState.currentPlayer})`
     },
-
     [Symbol.for("nodejs.util.inspect.custom")]() {
       return this.toString()
     },
