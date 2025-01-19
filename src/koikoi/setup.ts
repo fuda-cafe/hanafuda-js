@@ -1,20 +1,26 @@
 import { getCard } from "../core/cards.ts"
 import { checkHandYaku } from "../scoring/rules/hand.ts"
-import { createGameState } from "./state.js"
-
+import { YakuResults } from "../scoring/types.ts"
+import { createGameState } from "./state.ts"
+import type { GameState } from "./types.ts"
 /**
  * Determine first player using traditional rules
- * @param {import('./state.js').GameState} state
- * @returns {string} ID of first player
+ * @throws {Error} If no card is drawn from the deck
  */
-export function determineFirstPlayer(state) {
+export function determineFirstPlayer(state: GameState): string {
   // In traditional rules, each player draws a card
   // Player with earliest month goes first
-  const draws = {}
+  const draws: Record<string, number> = {}
 
   for (const playerId of Object.keys(state.players)) {
     const cardIndex = state.deck.draw()
+    if (cardIndex === null) {
+      throw new Error("No card drawn from deck")
+    }
     const card = getCard(cardIndex)
+    if (card === null) {
+      throw new Error("No card drawn from deck")
+    }
     draws[playerId] = card.month
 
     // Return card to deck
@@ -27,10 +33,8 @@ export function determineFirstPlayer(state) {
 
 /**
  * Deal initial cards to players and field
- * @param {import('./state.js').GameState} state
- * @returns {import('./state.js').GameState}
  */
-export function dealInitialCards(state) {
+export function dealInitialCards(state: GameState): GameState {
   // Deal 8 cards to each player
   for (const playerId of Object.keys(state.players)) {
     const hand = state.deck.drawMany(8)
@@ -46,11 +50,11 @@ export function dealInitialCards(state) {
 
 /**
  * Check for teyaku (hand yaku) for all players
- * @param {import('./state.js').GameState} state
- * @returns {Object.<string, Array<{name: string, points: number}>>} Map of player ID to their teyaku
  */
-export function checkInitialTeyaku(state) {
-  const results = {}
+export function checkInitialTeyaku(
+  state: GameState
+): Record<keyof GameState["players"], YakuResults> {
+  const results: Record<keyof GameState["players"], YakuResults> = {}
 
   for (const [playerId, playerState] of Object.entries(state.players)) {
     const teyaku = checkHandYaku(playerState.hand, { checkTeyaku: true })
@@ -64,11 +68,15 @@ export function checkInitialTeyaku(state) {
 
 /**
  * Initialize a new round
- * @param {string[]} playerIds
- * @param {Object} [options]
- * @returns {{ state: import('./state.js').GameState, teyaku: Object.<string, Array> }}
  */
-export function initializeRound(playerIds, options = {}) {
+export function initializeRound(
+  playerIds: string[],
+  options: Record<string, any> = {}
+): {
+  state: GameState
+  teyaku: Record<keyof GameState["players"], YakuResults>
+  firstPlayer: string
+} {
   // Create initial state
   const state = createGameState(playerIds, options)
 

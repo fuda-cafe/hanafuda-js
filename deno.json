@@ -7,7 +7,7 @@
     "test": "deno test"
   },
   "compilerOptions": {
-    "lib": ["deno.ns"]
+    "lib": ["deno.ns", "dom"]
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"

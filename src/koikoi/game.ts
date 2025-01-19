@@ -1,59 +1,90 @@
-import { initializeRound } from "./setup.js"
+import { initializeRound } from "./setup.ts"
 import { isMatch } from "../core/matching.ts"
 import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.ts"
-import { validateGameState } from "./state.js"
-import { isNullish } from "../utils/is-nullish.js"
+import { validateGameState } from "./state.ts"
+import { isNullish } from "../utils/is-nullish.ts"
+import type { GameState } from "./types.ts"
+import { RuleConfig, YakuResults } from "../scoring/types.ts"
+import { Collection } from "../core/types.ts"
+import { InvalidStateError } from "../errors.ts"
 
-/**
- * @typedef {'WAITING_FOR_HAND_CARD'|'WAITING_FOR_FIELD_CARDS'|'WAITING_FOR_DECK_MATCH'|'WAITING_FOR_KOI_DECISION'|'NO_MATCHES_DISCARD'|'ROUND_END'} GamePhase
- */
+export const GamePhase = {
+  WAITING_FOR_HAND_CARD: "WAITING_FOR_HAND_CARD",
+  WAITING_FOR_FIELD_CARDS: "WAITING_FOR_FIELD_CARDS",
+  WAITING_FOR_DECK_MATCH: "WAITING_FOR_DECK_MATCH",
+  WAITING_FOR_KOI_DECISION: "WAITING_FOR_KOI_DECISION",
+  NO_MATCHES_DISCARD: "NO_MATCHES_DISCARD",
+  ROUND_END: "ROUND_END",
+} as const
+export type GamePhase = (typeof GamePhase)[keyof typeof GamePhase]
 
-/**
- * @typedef {Object} GameResult
- * @property {string} type - Type of result ('MATCH_INVALID'|'MATCH_VALID'|'SCORE_UPDATE'|'DECK_DRAW'|'ROUND_END'|'NO_MATCHES'|'CARD_PLACED')
- * @property {string} [message] - Optional message describing the result
- * @property {Object} [data] - Additional data specific to the result type
- */
+export const GameResultType = {
+  SELECTION_UPDATED: "SELECTION_UPDATED",
+  MATCH_INVALID: "MATCH_INVALID",
+  MATCH_VALID: "MATCH_VALID",
+  SCORE_UPDATE: "SCORE_UPDATE",
+  DECK_DRAW: "DECK_DRAW",
+  ROUND_END: "ROUND_END",
+  NO_MATCHES: "NO_MATCHES",
+  CARD_PLACED: "CARD_PLACED",
+  CAPTURE_COMPLETE: "CAPTURE_COMPLETE",
+  TURN_END: "TURN_END",
+  ERROR: "ERROR",
+  STATE_LOADED: "STATE_LOADED",
+} as const
+export type GameResultType = (typeof GameResultType)[keyof typeof GameResultType]
 
-/**
- * @typedef {import('./state.js').GameState} GameState
- * @typedef {import('../scoring/manager.ts').ScoringManager} ScoringManager
- */
+export type GameResult = {
+  type: GameResultType
+  message?: string
+  data?: any
+}
+
+export type KoiKoiGame = {
+  startRound: (players?: string[]) => {
+    state: GameState
+    teyaku: Record<keyof GameState["players"], YakuResults>
+  }
+  getState: () => GameState | null
+  selectCard: (cardIndex: number, source: "hand" | "field") => GameResult
+  placeSelectedCard: () => GameResult
+  captureCards: () => GameResult
+  makeKoiKoiDecision: (continuePlay: boolean) => GameResult
+  loadState: (state: GameState) => GameResult
+  getCurrentPlayer: () => string | null
+  getCurrentHand: () => Collection | null
+  setCurrentPlayer?: (player: keyof GameState["players"]) => void
+  setPhase?: (phase: GamePhase) => void
+}
 
 /**
  * Creates a new KoiKoi game instance
- * @param {Object} [options]
- * @param {Object} [options.rules] - Custom scoring rules
- * @param {GameState} [options.initialState] - Initial game state
- * @param {boolean} [options.debug] - Whether to enable debug mode
+ * @param options - Game options
+ * @param options.rules - Custom scoring rules
+ * @param options.initialState - Initial game state
+ * @param options.debug - Whether to enable debug mode
  * @returns {KoiKoiGame}
  */
-export const createKoiKoiGame = (options = {}) => {
-  /** @type {GameState} */
-  let state = null
+export const createKoiKoiGame = (
+  options: { rules?: RuleConfig; initialState?: GameState; debug?: boolean } = {}
+): KoiKoiGame => {
+  let state: GameState | null = null
 
-  /** @type {string} */
-  let currentPlayer = null
+  let currentPlayer: string | null = null
 
-  /** @type {GamePhase} */
-  let phase = null
+  let phase: GamePhase | null = null
 
-  /** @type {number} */
-  let selectedHandCard = null
+  let selectedHandCard: number | null = null
 
-  /** @type {Set<number>} */
-  const selectedFieldCards = new Set()
+  const selectedFieldCards = new Set<number>()
 
-  /** @type {number} */
-  let drawnCard = null
+  let drawnCard: number | null = null
 
-  /** @type {ScoringManager} */
   const scoring = createScoringManager(options.rules || KOIKOI_RULES)
 
-  /** @type {boolean} */
   const debug = options.debug || false
 
-  const log = (message) => {
+  const log = (message: string) => {
     if (debug) {
       console.log(message)
     }
@@ -61,10 +92,9 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Sets the game phase (only available in debug mode)
-   * @param {GamePhase} newPhase
    * @throws {Error} If not in debug mode
    */
-  const setPhase = (newPhase) => {
+  const setPhase = (newPhase: GamePhase) => {
     if (!debug) {
       throw new Error("Phase can only be set in debug mode")
     }
@@ -85,28 +115,46 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Get the current player's hand
-   * @returns {Collection}
+   * @throws {InvalidStateError}
    */
-  const getCurrentHand = () => {
+  const getCurrentHand = (): Collection => {
+    if (!state) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
+    if (!currentPlayer) {
+      throw new InvalidStateError("Current player not set")
+    }
+
     return state.players[currentPlayer].hand
   }
 
   /**
    * Draws a card and handles matching logic
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const drawCard = () => {
+  const drawCard = (): GameResult => {
+    if (!state) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
     if (state.deck.isEmpty) {
       phase = "ROUND_END"
       return { type: "ROUND_END", message: "Deck is empty" }
     }
 
     drawnCard = state.deck.draw()
+
+    if (isNullish(drawnCard)) {
+      throw new InvalidStateError("Failed to draw card")
+    }
+
+    const cardToMatch = drawnCard
     selectedFieldCards.clear()
     selectedHandCard = null
 
     const matchingCards = Array.from(state.field).filter((fieldCard) =>
-      isMatch(drawnCard, fieldCard)
+      isMatch(cardToMatch, fieldCard)
     )
     const hasMatches = matchingCards.length > 0
 
@@ -122,6 +170,10 @@ export const createKoiKoiGame = (options = {}) => {
     state.field.add(drawnCard)
     const placedCard = drawnCard
     drawnCard = null
+
+    if (!currentPlayer) {
+      throw new InvalidStateError("Current player not set")
+    }
 
     const capturedPile = state.players[currentPlayer].captured
     const completedYaku = scoring(capturedPile)
@@ -151,10 +203,13 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Handles selection of a card from the player's hand
-   * @param {number} cardIndex
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const handleHandCardSelection = (cardIndex) => {
+  const handleHandCardSelection = (cardIndex: number): GameResult => {
+    if (!state) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
     const currentHand = getCurrentHand()
 
     if (!currentHand.has(cardIndex)) {
@@ -192,15 +247,22 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Handles selection of cards from the field
-   * @param {number} cardIndex
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const handleFieldCardSelection = (cardIndex) => {
+  const handleFieldCardSelection = (cardIndex: number): GameResult => {
+    if (!state) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
     if (isNullish(selectedHandCard) && isNullish(drawnCard)) {
       return { type: "ERROR", message: "Must select hand card first" }
     }
 
-    const sourceCard = selectedHandCard || drawnCard
+    const sourceCard = selectedHandCard ?? drawnCard
+    if (isNullish(sourceCard)) {
+      throw new InvalidStateError("Source card is null despite previous check")
+    }
+
     const fieldCard = cardIndex
 
     if (!state.field.has(fieldCard)) {
@@ -232,9 +294,13 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Places selected card on the field when no matches are available
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const placeSelectedCard = () => {
+  const placeSelectedCard = (): GameResult => {
+    if (!state || !currentPlayer) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
     if (isNullish(selectedHandCard)) {
       return { type: "ERROR", message: "No card selected" }
     }
@@ -257,14 +323,22 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Captures selected matching cards
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const captureCards = () => {
+  const captureCards = (): GameResult => {
+    if (!state || !currentPlayer) {
+      throw new InvalidStateError("Game not initialized")
+    }
+
     if ((isNullish(selectedHandCard) && isNullish(drawnCard)) || selectedFieldCards.size === 0) {
       return { type: "ERROR", message: "Invalid card selection" }
     }
 
-    const sourceCard = selectedHandCard || drawnCard
+    const sourceCard = selectedHandCard ?? drawnCard
+    if (isNullish(sourceCard)) {
+      throw new InvalidStateError("Source card is null despite previous check")
+    }
+
     const fieldCards = Array.from(selectedFieldCards)
 
     // Validate all matches
@@ -273,14 +347,14 @@ export const createKoiKoiGame = (options = {}) => {
     }
 
     // Remove cards from their sources
-    if (selectedHandCard) {
+    if (!isNullish(selectedHandCard)) {
       getCurrentHand().remove(selectedHandCard)
     }
-    fieldCards.forEach((card) => state.field.remove(card))
+    fieldCards.forEach((card) => state!.field.remove(card))
 
     // Add to captured pile
-    const capturedPile = state.players[currentPlayer].captured
-    capturedPile.addMany([sourceCard, ...fieldCards])
+    const capturedPile = state!.players[currentPlayer].captured
+    capturedPile?.addMany([sourceCard, ...fieldCards])
 
     // Check for completed yaku
     const completedYaku = scoring(capturedPile)
@@ -310,10 +384,9 @@ export const createKoiKoiGame = (options = {}) => {
 
   /**
    * Loads a game state
-   * @param {GameState} newState - State to load
-   * @returns {GameResult}
+   * @throws {InvalidStateError}
    */
-  const loadState = (newState) => {
+  const loadState = (newState: GameState): GameResult => {
     if (!validateGameState(newState)) {
       return {
         type: "ERROR",
@@ -339,40 +412,46 @@ export const createKoiKoiGame = (options = {}) => {
   /**
    * @type {KoiKoiGame}
    */
-  const api = {
-    startRound: (players = ["player1", "player2"]) => {
+  const api: KoiKoiGame = {
+    startRound: (players: string[] = ["player1", "player2"]) => {
       if (!Array.isArray(players) || players.length !== 2) {
         throw new Error("Players must be an array of length 2")
       }
 
       const result = initializeRound(players)
 
+      if (!result.state) {
+        throw new Error("Failed to initialize round")
+      }
       // If initial state was provided, use it instead
       if (options.initialState) {
         const loadResult = loadState(options.initialState)
         if (loadResult.type === "ERROR") {
           throw new Error(loadResult.message)
         }
-        return { state: api.getState(), teyaku: result.teyaku }
+        return { state: api.getState()!, teyaku: result.teyaku }
       }
 
       state = result.state
       phase = "WAITING_FOR_HAND_CARD"
       drawnCard = null
       currentPlayer = result.firstPlayer
-      return { state: api.getState(), teyaku: result.teyaku }
+      return { state: api.getState()!, teyaku: result.teyaku }
     },
 
-    getState: () => ({
-      ...state,
-      currentPlayer,
-      phase,
-      selectedHandCard,
-      selectedFieldCards: Array.from(selectedFieldCards),
-      drawnCard,
-    }),
+    getState: () =>
+      state
+        ? Object.freeze({
+            ...state,
+            currentPlayer,
+            phase,
+            selectedHandCard,
+            selectedFieldCards: Array.from(selectedFieldCards),
+            drawnCard,
+          })
+        : null,
 
-    selectCard: (cardIndex, source) => {
+    selectCard: (cardIndex: number, source: "hand" | "field"): GameResult => {
       if (!state) {
         return { type: "ERROR", message: "Game not initialized" }
       }
@@ -386,7 +465,7 @@ export const createKoiKoiGame = (options = {}) => {
       return { type: "ERROR", message: "Invalid source" }
     },
 
-    placeSelectedCard: () => {
+    placeSelectedCard: (): GameResult => {
       if (!state) {
         return { type: "ERROR", message: "Game not initialized" }
       }
@@ -398,7 +477,7 @@ export const createKoiKoiGame = (options = {}) => {
       return placeSelectedCard()
     },
 
-    captureCards: () => {
+    captureCards: (): GameResult => {
       if (!state) {
         return { type: "ERROR", message: "Game not initialized" }
       }
@@ -410,7 +489,7 @@ export const createKoiKoiGame = (options = {}) => {
       return captureCards()
     },
 
-    makeKoiKoiDecision: (continuePlay) => {
+    makeKoiKoiDecision: (continuePlay: boolean): GameResult => {
       if (!state) {
         return { type: "ERROR", message: "Game not initialized" }
       }
@@ -444,11 +523,11 @@ export const createKoiKoiGame = (options = {}) => {
 
     getCurrentPlayer: () => currentPlayer,
 
-    getCurrentHand: () => state.players[currentPlayer].hand,
+    getCurrentHand: () => (currentPlayer ? state!.players[currentPlayer].hand : null),
 
     ...(debug && {
-      setCurrentPlayer: (player) => {
-        if (state.players[player]) {
+      setCurrentPlayer: (player: keyof GameState["players"]) => {
+        if (state!.players[player]) {
           currentPlayer = player
         } else {
           throw new Error(`Invalid player: ${player}`)
@@ -459,11 +538,3 @@ export const createKoiKoiGame = (options = {}) => {
 
   return api
 }
-
-/**
- * @typedef {Object} KoiKoiGame
- * @property {(players?: string[]) => Object} startRound
- * @property {() => Object} getState
- * @property {(cardIndex: number, source: string) => GameResult} selectCard
- * ... other method definitions
- */

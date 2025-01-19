@@ -1,41 +1,40 @@
 import { createDeck } from "../core/deck.ts"
 import { createCollection } from "../core/collection.ts"
+import type { Collection, Deck } from "../core/types.ts"
+import { InvalidStateError } from "../errors.ts"
 
-/**
- * @typedef {Object} PlayerState
- * @property {import('../core/types.js').Collection} hand - Cards in player's hand
- * @property {import('../core/types.js').Collection} captured - Cards captured by player
- */
+export type PlayerState = {
+  hand: Collection
+  captured: Collection
+}
 
-/**
- * @typedef {Object} GameState
- * @property {import('../core/types.js').Deck} deck - Cards remaining in deck
- * @property {import('../core/types.js').Collection} field - Cards on the field
- * @property {Object.<string, PlayerState>} players - Map of player ID to their state
- * @property {string} currentPlayer - ID of active player
- * @property {number} currentMonth - Current month (1-12)
- * @property {string} [weather] - Current weather condition
- * @property {Array<{name: string, points: number}>} [completedYaku] - Completed yaku this round
- */
+export type GameState = {
+  deck: Deck
+  field: Collection
+  players: Record<string, PlayerState>
+  currentMonth: number
+  weather: string | null
+  completedYaku: Array<{ name: string; points: number }>
+  debug?: boolean
+  toJSON(): any
+  toString(): string
+}
 
 /**
  * Create initial game state for a new round
- * @param {string[]} playerIds - Array of player IDs
- * @param {Object} [options] - Game options
- * @param {number} [options.month] - Starting month (1-12)
- * @param {string} [options.weather] - Weather condition
- * @param {string} [options.fromJSON] - JSON string to initialize from
- * @returns {Readonly<GameState>}
  */
-export function createGameState(playerIds, options = {}) {
+export function createGameState(
+  playerIds: string[],
+  options: { month?: number; weather?: string; fromJSON?: string; debug?: boolean } = {}
+): Readonly<GameState> {
   const { month = 1, weather = null, fromJSON, debug = false } = options
 
   if (fromJSON) {
-    return deserializeState(fromJSON, debug)
+    return deserializeState(fromJSON)
   }
 
   // Initialize empty player states
-  const players = {}
+  const players: Record<string, PlayerState> = {}
   for (const id of playerIds) {
     players[id] = {
       hand: createCollection(),
@@ -47,7 +46,6 @@ export function createGameState(playerIds, options = {}) {
   const mutableState = {
     currentMonth: month,
     completedYaku: [],
-    currentPlayer: null,
   }
 
   const state = {
@@ -57,7 +55,7 @@ export function createGameState(playerIds, options = {}) {
     get currentMonth() {
       return mutableState.currentMonth
     },
-    set currentMonth(newMonth) {
+    set currentMonth(newMonth: number) {
       if (newMonth >= 1 && newMonth <= 12) {
         mutableState.currentMonth = newMonth
       } else {
@@ -90,12 +88,12 @@ export function createGameState(playerIds, options = {}) {
       }
     },
     toString() {
-      return `GameState(month: ${mutableState.currentMonth}, player: ${mutableState.currentPlayer})`
+      return `GameState(month: ${mutableState.currentMonth})`
     },
     [Symbol.for("nodejs.util.inspect.custom")]() {
       return this.toString()
     },
-  }
+  } as const satisfies GameState
 
   return Object.freeze(state)
 }
@@ -104,36 +102,24 @@ export function createGameState(playerIds, options = {}) {
  * Deserialize a game state from JSON
  * @param {string} json - JSON string to parse
  * @returns {Readonly<GameState>}
- * @throws {Error} If JSON is invalid
+ * @throws {InvalidStateError} If JSON is invalid
  */
-function deserializeState(json) {
-  const data = JSON.parse(json)
+function deserializeState(json: string): Readonly<GameState> {
+  const data: GameState = JSON.parse(json)
 
   // Validate required properties
   if (!data.deck || !data.field || !data.players || !data.currentMonth) {
-    throw new Error("Invalid state data: missing required properties")
+    throw new InvalidStateError("Invalid state data: missing required properties")
   }
 
   // Create state with collections
-  const state = {
+  const state: GameState = {
     deck: createDeck({ fromJSON: JSON.stringify(data.deck) }),
     field: createCollection({ fromJSON: JSON.stringify(data.field) }),
     players: {},
     currentMonth: data.currentMonth,
     weather: data.weather,
     completedYaku: data.completedYaku || [],
-  }
-
-  // Restore player states
-  for (const [playerId, playerData] of Object.entries(data.players)) {
-    state.players[playerId] = {
-      hand: createCollection({ fromJSON: JSON.stringify(playerData.hand) }),
-      captured: createCollection({ fromJSON: JSON.stringify(playerData.captured) }),
-    }
-  }
-
-  // Add serialization methods
-  Object.assign(state, {
     toJSON() {
       return {
         deck: this.deck.toJSON(),
@@ -153,37 +139,39 @@ function deserializeState(json) {
       }
     },
     toString() {
-      return `GameState(month: ${this.currentMonth}, player: ${currentPlayer})`
+      return `GameState(month: ${this.currentMonth})`
     },
     [Symbol.for("nodejs.util.inspect.custom")]() {
       return this.toString()
     },
-  })
+  }
+
+  // Restore player states
+  for (const [playerId, playerData] of Object.entries(data.players)) {
+    state.players[playerId] = {
+      hand: createCollection({ fromJSON: JSON.stringify(playerData.hand) }),
+      captured: createCollection({ fromJSON: JSON.stringify(playerData.captured) }),
+    }
+  }
 
   return Object.freeze(state)
 }
 
 /**
  * Validates a game state object
- * @param {GameState} state - State to validate
- * @returns {boolean} True if valid, false otherwise
+ * @throws {InvalidStateError} If state is invalid
  */
-export function validateGameState(state) {
+export function validateGameState(state: GameState): boolean {
   // Check required properties
   if (!state.deck || !state.field || !state.players) {
-    throw new Error("Invalid state data: missing required properties")
+    throw new InvalidStateError("Invalid state data: missing required properties")
   }
 
   // Validate players
   for (const [_, playerState] of Object.entries(state.players)) {
     if (!playerState.hand || !playerState.captured) {
-      throw new Error("Invalid state data: missing player hand or captured")
+      throw new InvalidStateError("Invalid state data: missing player hand or captured")
     }
-  }
-
-  // Validate current player
-  if (state.currentPlayer && !state.players[state.currentPlayer]) {
-    throw new Error("Invalid state data: missing current player")
   }
 
   // Validate card uniqueness
@@ -195,7 +183,7 @@ export function validateGameState(state) {
 
   // Total cards should be 48
   if (allCards.size !== 48) {
-    throw new Error("Invalid state data: total cards should be 48")
+    throw new InvalidStateError("Invalid state data: total cards should be 48")
   }
 
   return true

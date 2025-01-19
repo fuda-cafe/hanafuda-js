@@ -1,15 +1,16 @@
 import { assertEquals, assertNotEquals } from "@std/assert"
-import { createKoiKoiGame } from "../../src/koikoi/game.js"
+import { createKoiKoiGame } from "../../src/koikoi/game.ts"
 
 Deno.test("KoiKoi - Game Initialization", () => {
   const game = createKoiKoiGame()
-  const state = game.getState()
+  const uninitializedState = game.getState()
 
   // Initial state should be null until startRound is called
-  assertEquals(state.phase, null)
-  assertEquals(state.selectedHandCard, null)
-  assertEquals(state.selectedFieldCards, [])
-  assertEquals(state.drawnCard, null)
+  assertEquals(uninitializedState, null)
+
+  game.startRound()
+  const initializedState = game.getState()
+  assertNotEquals(initializedState, null)
 })
 
 Deno.test("KoiKoi - Round Start", () => {
