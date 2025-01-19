@@ -21,6 +21,7 @@ import { getCard, isValidCardIndex } from "./cards.js"
  * @property {(card: number) => boolean} remove Remove card from collection
  * @property {(cards: Array<number>) => number} removeMany Remove multiple cards from collection
  * @property {number} size Get collection size
+ * @property {boolean} isEmpty Check if collection is empty
  * @property {() => void} clear Clear all cards
  * @property {() => Iterator<number>} [Symbol.iterator] Iterator implementation
  */
@@ -49,7 +50,7 @@ export const createCollection = (options = {}) => {
   // Create the collection
   const cardSet = new Set(initialCards)
 
-  return Object.freeze({
+  const collection = Object.freeze({
     /**
      * Make collection iterable
      * @returns {Iterator<number>}
@@ -152,6 +153,14 @@ export const createCollection = (options = {}) => {
     },
 
     /**
+     * Check if collection is empty
+     * @returns {boolean}
+     */
+    get isEmpty() {
+      return cardSet.size === 0
+    },
+
+    /**
      * Clear all cards
      */
     clear() {
@@ -180,6 +189,20 @@ export const createCollection = (options = {}) => {
      */
     [Symbol.for("nodejs.util.inspect.custom")]() {
       return this.toString()
+    },
+  })
+
+  // Wrap collection with Proxy to enable array-like index access
+  return new Proxy(collection, {
+    get(target, prop) {
+      if (typeof prop === "symbol") return target[prop]
+      // Handle numeric indices and convert string numbers to integers
+      if (!isNaN(prop)) {
+        const index = parseInt(prop, 10)
+        const arr = Array.from(target)
+        return arr[index]
+      }
+      return target[prop]
     },
   })
 }

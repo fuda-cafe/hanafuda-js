@@ -182,3 +182,10 @@ Deno.test("Collection JSON Deserialization", () => {
   // Test invalid card indices in JSON
   assertThrows(() => createCollection({ fromJSON: "[-1]" }), Error, "Invalid card index")
 })
+
+Deno.test("Collection Array-like Access", () => {
+  const collection = createCollection({ cards: [0, 1, 2] })
+  assertEquals(collection[0], 0)
+  assertEquals(collection[1], 1)
+  assertEquals(collection[2], 2)
+})
