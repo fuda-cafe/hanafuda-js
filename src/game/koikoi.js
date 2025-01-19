@@ -3,6 +3,7 @@ import { initializeRound } from "./setup.js"
 import { isMatch, hasMatch } from "../core/matching.js"
 import { createScoringManager, KOIKOI_RULES } from "../scoring/manager.js"
 import { validateGameState } from "./state.js"
+import { isNullish } from "../utils/is-nullish.js"
 
 /**
  * @typedef {'WAITING_FOR_HAND_CARD'|'WAITING_FOR_FIELD_CARDS'|'WAITING_FOR_DECK_MATCH'|'WAITING_FOR_KOI_DECISION'|'NO_MATCHES_DISCARD'|'ROUND_END'} GamePhase
@@ -84,6 +85,14 @@ export const createKoiKoiGame = (options = {}) => {
   }
 
   /**
+   * Get the current player's hand
+   * @returns {Collection}
+   */
+  const getCurrentHand = () => {
+    return state.players[currentPlayer].hand
+  }
+
+  /**
    * Draws a card and handles matching logic
    * @returns {GameResult}
    */
@@ -127,6 +136,13 @@ export const createKoiKoiGame = (options = {}) => {
       }
     }
 
+    if (getCurrentHand().isEmpty) {
+      phase = "ROUND_END"
+      return {
+        type: "ROUND_END",
+        message: `Exhaustive draw: ${currentPlayer} has no cards`,
+      }
+    }
     switchPlayers()
     return {
       type: "DECK_DRAW",
@@ -140,24 +156,25 @@ export const createKoiKoiGame = (options = {}) => {
    * @returns {GameResult}
    */
   const handleHandCardSelection = (cardIndex) => {
-    const currentHand = state.players[currentPlayer].hand
-    const card = Array.from(currentHand)[cardIndex]
+    const currentHand = getCurrentHand()
 
-    if (!card) {
-      return { type: "ERROR", message: "Card not in current player's hand" }
+    if (!currentHand.has(cardIndex)) {
+      return { type: "ERROR", message: `Card ${cardIndex} not in current player's hand` }
     }
 
-    selectedHandCard = card
+    selectedHandCard = cardIndex
     selectedFieldCards.clear()
 
-    const matchingCards = Array.from(state.field).filter((fieldCard) => isMatch(card, fieldCard))
+    const matchingCards = Array.from(state.field).filter((fieldCard) =>
+      isMatch(cardIndex, fieldCard)
+    )
 
     if (matchingCards.length === 0) {
       phase = "NO_MATCHES_DISCARD"
       return {
         type: "NO_MATCHES",
         data: {
-          selectedCard: card,
+          selectedCard: cardIndex,
           hasMatches: false,
         },
       }
@@ -167,7 +184,7 @@ export const createKoiKoiGame = (options = {}) => {
     return {
       type: "SELECTION_UPDATED",
       data: {
-        selectedHandCard: card,
+        selectedHandCard: cardIndex,
         matchingCards,
         phase,
       },
@@ -180,19 +197,22 @@ export const createKoiKoiGame = (options = {}) => {
    * @returns {GameResult}
    */
   const handleFieldCardSelection = (cardIndex) => {
-    if (!selectedHandCard && !drawnCard) {
+    if (isNullish(selectedHandCard) && isNullish(drawnCard)) {
       return { type: "ERROR", message: "Must select hand card first" }
     }
 
     const sourceCard = selectedHandCard || drawnCard
-    const fieldCard = Array.from(state.field)[cardIndex]
+    const fieldCard = cardIndex
 
-    if (!fieldCard) {
-      return { type: "ERROR", message: "Invalid field card index" }
+    if (!state.field.has(fieldCard)) {
+      return { type: "ERROR", message: `Invalid field card index: ${fieldCard}` }
     }
 
     if (!isMatch(sourceCard, fieldCard)) {
-      return { type: "ERROR", message: "Selected cards do not match" }
+      return {
+        type: "ERROR",
+        message: `Selected cards do not match: ${sourceCard} and ${fieldCard}`,
+      }
     }
 
     if (selectedFieldCards.has(fieldCard)) {
@@ -216,12 +236,12 @@ export const createKoiKoiGame = (options = {}) => {
    * @returns {GameResult}
    */
   const placeSelectedCard = () => {
-    if (!selectedHandCard) {
+    if (isNullish(selectedHandCard)) {
       return { type: "ERROR", message: "No card selected" }
     }
 
     // Remove from hand and add to field
-    state.players[currentPlayer].hand.remove(selectedHandCard)
+    getCurrentHand().remove(selectedHandCard)
     state.field.add(selectedHandCard)
 
     const placedCard = selectedHandCard
@@ -241,7 +261,7 @@ export const createKoiKoiGame = (options = {}) => {
    * @returns {GameResult}
    */
   const captureCards = () => {
-    if ((!selectedHandCard && !drawnCard) || selectedFieldCards.size === 0) {
+    if ((isNullish(selectedHandCard) && isNullish(drawnCard)) || selectedFieldCards.size === 0) {
       return { type: "ERROR", message: "Invalid card selection" }
     }
 
@@ -255,13 +275,13 @@ export const createKoiKoiGame = (options = {}) => {
 
     // Remove cards from their sources
     if (selectedHandCard) {
-      state.players[currentPlayer].hand.delete(selectedHandCard)
+      getCurrentHand().remove(selectedHandCard)
     }
-    fieldCards.forEach((card) => state.field.delete(card))
+    fieldCards.forEach((card) => state.field.remove(card))
 
     // Add to captured pile
     const capturedPile = state.players[currentPlayer].captured
-    capturedPile.push(sourceCard, ...fieldCards)
+    capturedPile.addMany([sourceCard, ...fieldCards])
 
     // Check for completed yaku
     const completedYaku = scoring(capturedPile)
@@ -279,7 +299,7 @@ export const createKoiKoiGame = (options = {}) => {
       }
     }
 
-    if (!selectedHandCard) {
+    if (isNullish(selectedHandCard)) {
       switchPlayers()
     }
 
@@ -424,6 +444,8 @@ export const createKoiKoiGame = (options = {}) => {
     setPhase: debug ? setPhase : undefined,
 
     getCurrentPlayer: () => currentPlayer,
+
+    getCurrentHand: () => state.players[currentPlayer].hand,
 
     ...(debug && {
       setCurrentPlayer: (player) => {

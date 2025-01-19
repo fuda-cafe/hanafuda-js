@@ -55,9 +55,9 @@ Deno.test("KoiKoi - Production Mode Phase Setting", () => {
 
 Deno.test("KoiKoi - Card Selection", () => {
   const game = createKoiKoiGame()
-  game.startRound(["player1", "player2"])
+  game.startRound()
 
-  const result = game.selectCard(0, "hand")
+  const result = game.selectCard(game.getCurrentHand()[0], "hand")
   assertEquals(result.type === "NO_MATCHES" || result.type === "SELECTION_UPDATED", true)
 
   if (result.type === "NO_MATCHES") {
@@ -71,7 +71,7 @@ Deno.test("KoiKoi - Card Playing", () => {
   // Set correct phase for placing card (debug mode)
   const debugGame = createKoiKoiGame({ debug: true })
   debugGame.startRound()
-  debugGame.selectCard(0, "hand")
+  debugGame.selectCard(debugGame.getCurrentHand()[0], "hand")
   debugGame.setPhase("NO_MATCHES_DISCARD")
 
   const result = debugGame.placeSelectedCard()
