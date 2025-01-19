@@ -9,7 +9,6 @@ A modular JavaScript library for implementing Hanafuda card games, with a focus 
 - State management with serialization support
 - Collection-based card management
 - Phase-based game flow
-- Example web application
 
 ## Project Structure
 
@@ -18,10 +17,8 @@ hanafuda-js/
 ├── src/
 │   ├── core/           # Core game mechanics (cards, matching, collections)
 │   ├── koikoi/           # Game state management and main game loop
-│   ├── scoring/        # Yaku scoring system and rules
-│   └── example/        # Web application example
+│   └── scoring/        # Yaku scoring system and rules
 ├── tests/              # Test suites
-├── main.js            # Deno server
 └── README.md
 ```
 
@@ -144,18 +141,6 @@ The game follows these phases:
 - `WAITING_FOR_DECK_MATCH`: Player must capture matching cards for drawn card
 - `WAITING_FOR_KOI_DECISION`: Player must decide whether to continue (koi-koi)
 - `ROUND_END`: Round is complete
-
-## Example Application
-
-An example web application is included in the `src/example` directory. To run it:
-
-```bash
-# Start the Deno server
-deno run --allow-net --allow-read main.js
-
-# Open in browser
-http://localhost:8000/example/
-```
 
 ## Development
 
