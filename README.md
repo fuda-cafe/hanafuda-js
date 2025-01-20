@@ -10,32 +10,68 @@ A modular JavaScript library for implementing Hanafuda card games, with a focus 
 - Collection-based card management
 - Phase-based game flow
 
-## Project Structure
-
-```
-hanafuda-js/
-├── src/
-│   ├── core/           # Core game mechanics (cards, matching, collections)
-│   ├── koikoi/           # Game state management and main game loop
-│   └── scoring/        # Yaku scoring system and rules
-├── tests/              # Test suites
-└── README.md
-```
-
 ## Installation
 
+### NPM
+
 ```bash
-# Clone the repository
-git clone https://github.com/fudapop/hanafuda-js.git
+npm install @fudapop/hanafuda-js
+```
 
-# Navigate to the project directory
-cd hanafuda-js
+### Deno
 
-# Install dependencies (if any)
-npm install
+```typescript
+import { KoiKoi } from "jsr:@fudapop/hanafuda-js"
+```
+
+### CDN
+
+You can include Hanafuda-JS directly in your HTML:
+
+```html
+<script src="https://unpkg.com/@fudapop/hanafuda-js"></script>
+```
+
+Then use it globally:
+
+```html
+<script>
+  const game = new hanafudaJS.KoiKoi()
+
+  // Start a new round
+  const { state, teyaku } = game.startRound()
+
+  // Access other exports
+  const deck = hanafudaJS.createStandardDeck()
+  const collection = hanafudaJS.createCollection()
+</script>
 ```
 
 ## Usage
+
+### ESM/TypeScript
+
+```typescript
+import { KoiKoi, createStandardDeck, createCollection } from "@fudapop/hanafuda-js"
+
+// Create a new game instance
+const game = new KoiKoi()
+
+// Start a new round
+const { state, teyaku } = game.startRound()
+```
+
+### CommonJS
+
+```javascript
+const { KoiKoi, createStandardDeck, createCollection } = require("@fudapop/hanafuda-js")
+
+// Create a new game instance
+const game = new KoiKoi()
+
+// Start a new round
+const { state, teyaku } = game.startRound()
+```
 
 ### Basic Game Setup
 
@@ -144,7 +180,28 @@ The game follows these phases:
 
 ## Development
 
-See the [Game Module README](src/koikoi/README.md) for detailed documentation of the game engine.
+```bash
+# Clone the repository
+git clone https://github.com/fudapop/hanafuda-js.git
+
+# Navigate to the project directory
+cd hanafuda-js
+
+# Install dependencies (if any)
+deno install
+```
+
+## Project Structure
+
+```
+hanafuda-js/
+├── src/
+│   ├── core/           # Core game mechanics (cards, matching, collections)
+│   ├── koikoi/           # Game state management and main game loop
+│   └── scoring/        # Yaku scoring system and rules
+├── tests/              # Test suites
+└── README.md
+```
 
 ## License
 
