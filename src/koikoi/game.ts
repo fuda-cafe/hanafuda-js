@@ -34,11 +34,110 @@ export const GameResultType = {
 } as const
 export type GameResultType = (typeof GameResultType)[keyof typeof GameResultType]
 
-export type GameResult = {
-  type: GameResultType
+// Base type for all results
+type BaseResult<T extends GameResultType, D = undefined> = {
+  type: T
   message?: string
-  data?: any
+  data: D
 }
+
+// Data types for each result type
+type HandSelectionData = {
+  selectedHandCard: number
+  matchingCards: number[]
+  canAutoCapture: boolean // true for 1 or 3 matches, false for 2
+  phase: GamePhase
+}
+
+type FieldSelectionData = {
+  selectedHandCard: number
+  selectedFieldCards: number[]
+  autoSelected?: boolean
+  phase: GamePhase
+}
+
+type NoMatchesData = {
+  selectedHandCard: number
+}
+
+type DeckDrawData = {
+  drawnCard: number
+  matchingCards: number[]
+  placedOnField?: boolean
+  phase: GamePhase
+}
+
+type ScoreUpdateData = {
+  completedYaku: YakuResults
+  phase: GamePhase
+  drawnCard?: number
+  placedOnField?: boolean
+}
+
+type CardPlacedData = {
+  placedCard: number
+  nextAction: GameResult
+}
+
+type RoundEndData = {
+  winner?: keyof GameState["players"]
+  yaku?: YakuResults
+  message?: string
+  phase: GamePhase
+}
+
+type CaptureCompleteData = {
+  phase: GamePhase
+}
+
+type TurnEndData = {
+  phase: GamePhase
+}
+
+type StateLoadedData = {
+  state: GameState
+}
+
+// Specific result types used by the API
+type HandSelectionResult =
+  | BaseResult<"NO_MATCHES", NoMatchesData>
+  | BaseResult<"SELECTION_UPDATED", HandSelectionData>
+  | BaseResult<"ERROR", { message: string }>
+
+type FieldSelectionResult =
+  | BaseResult<"SELECTION_UPDATED", FieldSelectionData>
+  | BaseResult<"ERROR", { message: string }>
+
+type CardPlacementResult =
+  | { type: "CARD_PLACED"; data: CardPlacedData }
+  | { type: "ERROR"; data: { message: string } }
+
+type CaptureResult =
+  | { type: "CAPTURE_COMPLETE"; data: CaptureCompleteData }
+  | { type: "SCORE_UPDATE"; data: ScoreUpdateData }
+  | { type: "ERROR"; data: { message: string } }
+
+type KoiKoiDecisionResult =
+  | { type: "TURN_END"; data: TurnEndData }
+  | { type: "ROUND_END"; data: RoundEndData }
+  | { type: "ERROR"; data: { message: string } }
+
+type StateLoadResult =
+  | { type: "STATE_LOADED"; data: StateLoadedData }
+  | { type: "ERROR"; data: { message: string } }
+
+// General GameResult type that includes all possible results
+export type GameResult =
+  | BaseResult<"SELECTION_UPDATED", HandSelectionData | FieldSelectionData>
+  | BaseResult<"NO_MATCHES", NoMatchesData>
+  | BaseResult<"DECK_DRAW", DeckDrawData>
+  | BaseResult<"SCORE_UPDATE", ScoreUpdateData>
+  | BaseResult<"CARD_PLACED", CardPlacedData>
+  | BaseResult<"ROUND_END", RoundEndData>
+  | BaseResult<"CAPTURE_COMPLETE", CaptureCompleteData>
+  | BaseResult<"TURN_END", TurnEndData>
+  | BaseResult<"STATE_LOADED", StateLoadedData>
+  | BaseResult<"ERROR", { message: string }>
 
 /**
  * Core game interface for Koi-Koi implementation.
@@ -52,16 +151,21 @@ export type KoiKoiGame = {
   }
   /** Get current game state */
   getState: () => GameState | null
-  /** Select a card from hand or field */
-  selectCard: (cardIndex: number, source: "hand" | "field") => GameResult
+
+  // Split selectCard into two specific methods
+  /** Select a card from the current player's hand */
+  selectHandCard: (cardIndex: number) => HandSelectionResult
+  /** Select a card from the field (after hand selection) */
+  selectFieldCard: (cardIndex: number) => FieldSelectionResult
+
   /** Place selected card on field */
-  placeSelectedCard: () => GameResult
+  placeSelectedCard: () => CardPlacementResult
   /** Capture matching cards */
-  captureCards: () => GameResult
+  captureCards: () => CaptureResult
   /** Make koi-koi decision to continue or end round */
-  makeKoiKoiDecision: (continuePlay: boolean) => GameResult
+  makeKoiKoiDecision: (continuePlay: boolean) => KoiKoiDecisionResult
   /** Load a saved game state */
-  loadState: (state: GameState) => GameResult
+  loadState: (state: GameState) => StateLoadResult
   /** Get current player ID */
   getCurrentPlayer: () => string | null
   /** Get current player's hand */
@@ -82,7 +186,7 @@ export const createKoiKoiGame = (
   options: { rules?: RuleConfig; initialState?: GameState; debug?: boolean } = {}
 ): KoiKoiGame => {
   let state: GameState | null = null
-  let phase: GamePhase | null = null
+  let phase: GamePhase = "WAITING_FOR_HAND_CARD"
   let selectedHandCard: number | null = null
   const selectedFieldCards = new Set<number>()
   let drawnCard: number | null = null
@@ -146,7 +250,10 @@ export const createKoiKoiGame = (
 
     if (state.deck.isEmpty) {
       phase = "ROUND_END"
-      return { type: "ROUND_END", message: "Deck is empty" }
+      return {
+        type: "ROUND_END",
+        data: { message: "Deck is empty", phase },
+      }
     }
 
     drawnCard = state.deck.draw()
@@ -168,7 +275,7 @@ export const createKoiKoiGame = (
       phase = "WAITING_FOR_DECK_MATCH"
       return {
         type: "DECK_DRAW",
-        data: { drawnCard, hasMatches: true, matchingCards, phase },
+        data: { drawnCard, matchingCards, phase },
       }
     }
 
@@ -197,13 +304,13 @@ export const createKoiKoiGame = (
       phase = "ROUND_END"
       return {
         type: "ROUND_END",
-        message: `Exhaustive draw: ${state.currentPlayer} has no cards`,
+        data: { message: `Exhaustive draw: ${state.currentPlayer} has no cards`, phase },
       }
     }
     switchPlayers()
     return {
       type: "DECK_DRAW",
-      data: { drawnCard: placedCard, hasMatches: false, placedOnField: true, phase },
+      data: { drawnCard: placedCard, matchingCards: [], placedOnField: true, phase },
     }
   }
 
@@ -219,7 +326,10 @@ export const createKoiKoiGame = (
     const currentHand = getCurrentHand()
 
     if (!currentHand.has(cardIndex)) {
-      return { type: "ERROR", message: `Card ${cardIndex} not in current player's hand` }
+      return {
+        type: "ERROR",
+        data: { message: `Card ${cardIndex} not in current player's hand` },
+      }
     }
 
     selectedHandCard = cardIndex
@@ -234,8 +344,7 @@ export const createKoiKoiGame = (
       return {
         type: "NO_MATCHES",
         data: {
-          selectedCard: cardIndex,
-          hasMatches: false,
+          selectedHandCard: cardIndex,
         },
       }
     }
@@ -246,6 +355,7 @@ export const createKoiKoiGame = (
       data: {
         selectedHandCard: cardIndex,
         matchingCards,
+        canAutoCapture: matchingCards.length === 3 || matchingCards.length === 1,
         phase,
       },
     }
@@ -261,7 +371,10 @@ export const createKoiKoiGame = (
     }
 
     if (isNullish(selectedHandCard) && isNullish(drawnCard)) {
-      return { type: "ERROR", message: "Must select hand card first" }
+      return {
+        type: "ERROR",
+        data: { message: "Must select hand card first" },
+      }
     }
 
     const sourceCard = selectedHandCard ?? drawnCard
@@ -272,29 +385,66 @@ export const createKoiKoiGame = (
     const fieldCard = cardIndex
 
     if (!state.field.has(fieldCard)) {
-      return { type: "ERROR", message: `Invalid field card index: ${fieldCard}` }
+      return {
+        type: "ERROR",
+        data: { message: `Invalid field card index: ${fieldCard}` },
+      }
     }
 
     if (!isMatch(sourceCard, fieldCard)) {
       return {
         type: "ERROR",
-        message: `Selected cards do not match: ${sourceCard} and ${fieldCard}`,
+        data: { message: `Selected cards do not match: ${sourceCard} and ${fieldCard}` },
       }
     }
 
-    if (selectedFieldCards.has(fieldCard)) {
-      selectedFieldCards.delete(fieldCard)
-    } else {
-      selectedFieldCards.add(fieldCard)
-    }
+    // Get all matching cards in the field
+    const allMatches = Array.from(state.field).filter((card) => isMatch(sourceCard, card))
 
-    return {
-      type: "SELECTION_UPDATED",
-      data: {
-        selectedHandCard: sourceCard,
-        selectedFieldCards: Array.from(selectedFieldCards),
-        phase,
-      },
+    if (allMatches.length === 3) {
+      // With three matches, automatically select all cards
+      selectedFieldCards.clear()
+      allMatches.forEach((card) => selectedFieldCards.add(card))
+
+      return {
+        type: "SELECTION_UPDATED",
+        data: {
+          selectedHandCard: sourceCard,
+          selectedFieldCards: Array.from(selectedFieldCards),
+          autoSelected: true,
+          phase,
+        },
+      }
+    } else if (allMatches.length === 2) {
+      // With two matches, allow selecting exactly one card
+      if (selectedFieldCards.has(fieldCard)) {
+        selectedFieldCards.delete(fieldCard)
+      } else {
+        selectedFieldCards.clear()
+        selectedFieldCards.add(fieldCard)
+      }
+
+      return {
+        type: "SELECTION_UPDATED",
+        data: {
+          selectedHandCard: sourceCard,
+          selectedFieldCards: Array.from(selectedFieldCards),
+          phase,
+        },
+      }
+    } else {
+      // With single match, automatically select it
+      selectedFieldCards.clear()
+      selectedFieldCards.add(fieldCard)
+
+      return {
+        type: "SELECTION_UPDATED",
+        data: {
+          selectedHandCard: sourceCard,
+          selectedFieldCards: Array.from(selectedFieldCards),
+          phase,
+        },
+      }
     }
   }
 
@@ -302,13 +452,16 @@ export const createKoiKoiGame = (
    * Places selected card on the field when no matches are available
    * @throws {InvalidStateError}
    */
-  const placeSelectedCard = (): GameResult => {
+  const handlePlaceSelectedCard = (): GameResult => {
     if (!state || !state.currentPlayer) {
       throw new InvalidStateError("Game not initialized")
     }
 
     if (isNullish(selectedHandCard)) {
-      return { type: "ERROR", message: "No card selected" }
+      return {
+        type: "ERROR",
+        data: { message: "No card selected" },
+      }
     }
 
     // Remove from hand and add to field
@@ -331,13 +484,16 @@ export const createKoiKoiGame = (
    * Captures selected matching cards
    * @throws {InvalidStateError}
    */
-  const captureCards = (): GameResult => {
+  const handleCaptureCards = (): GameResult => {
     if (!state || !state.currentPlayer) {
       throw new InvalidStateError("Game not initialized")
     }
 
     if ((isNullish(selectedHandCard) && isNullish(drawnCard)) || selectedFieldCards.size === 0) {
-      return { type: "ERROR", message: "Invalid card selection" }
+      return {
+        type: "ERROR",
+        data: { message: "Invalid card selection" },
+      }
     }
 
     const sourceCard = selectedHandCard ?? drawnCard
@@ -346,10 +502,36 @@ export const createKoiKoiGame = (
     }
 
     const fieldCards = Array.from(selectedFieldCards)
+    const allMatches = Array.from(state.field).filter((card) => isMatch(sourceCard, card))
+
+    // Validate capture rules
+    if (allMatches.length === 3 && fieldCards.length !== 3) {
+      return {
+        type: "ERROR",
+        data: { message: "Must capture all three matching cards" },
+      }
+    }
+
+    if (allMatches.length === 2 && fieldCards.length !== 1) {
+      return {
+        type: "ERROR",
+        data: { message: "Must capture exactly one card when two matches exist" },
+      }
+    }
+
+    if (allMatches.length === 1 && fieldCards.length !== 1) {
+      return {
+        type: "ERROR",
+        data: { message: "Must capture the matching card" },
+      }
+    }
 
     // Validate all matches
     if (!fieldCards.every((card) => isMatch(sourceCard, card))) {
-      return { type: "ERROR", message: "Invalid matches selected" }
+      return {
+        type: "ERROR",
+        data: { message: "Invalid matches selected" },
+      }
     }
 
     // Remove cards from their sources
@@ -384,7 +566,7 @@ export const createKoiKoiGame = (
 
     return {
       type: "CAPTURE_COMPLETE",
-      data: { phase },
+      data: { phase: phase! },
     }
   }
 
@@ -392,11 +574,26 @@ export const createKoiKoiGame = (
    * Loads a game state
    * @throws {InvalidStateError}
    */
-  const loadState = (newState: GameState): GameResult => {
-    if (!validateGameState(newState)) {
+  const loadState = (newState: GameState): StateLoadResult => {
+    const result = handleLoadState(newState)
+
+    // Type guard to ensure we only return StateLoadResult types
+    if (result.type === "STATE_LOADED" || result.type === "ERROR") {
+      return result as StateLoadResult
+    }
+
+    return {
+      type: "ERROR",
+      data: { message: `Unexpected result type: ${result.type}` },
+    }
+  }
+
+  // Rename the original loadState function to avoid naming conflict
+  const handleLoadState = (newState: GameState): GameResult => {
+    if (!debug && !validateGameState(newState)) {
       return {
         type: "ERROR",
-        message: "Invalid game state",
+        data: { message: "Invalid game state" },
       }
     }
 
@@ -410,7 +607,7 @@ export const createKoiKoiGame = (
     phase = "WAITING_FOR_HAND_CARD"
     return {
       type: "STATE_LOADED",
-      data: { state: api.getState() },
+      data: { state: api.getState()! },
     }
   }
 
@@ -432,7 +629,7 @@ export const createKoiKoiGame = (
       if (options.initialState) {
         const loadResult = loadState(options.initialState)
         if (loadResult.type === "ERROR") {
-          throw new Error(loadResult.message)
+          throw new Error(loadResult.data.message)
         }
         return { state: api.getState()!, teyaku: result.teyaku }
       }
@@ -455,51 +652,98 @@ export const createKoiKoiGame = (
           })
         : null,
 
-    selectCard: (cardIndex: number, source: "hand" | "field"): GameResult => {
-      if (!state) {
-        return { type: "ERROR", message: "Game not initialized" }
+    selectHandCard: (cardIndex: number): HandSelectionResult => {
+      const result = handleHandCardSelection(cardIndex)
+
+      // Type guard to ensure we only return HandSelectionResult types
+      if (
+        result.type === "NO_MATCHES" ||
+        result.type === "SELECTION_UPDATED" ||
+        result.type === "ERROR"
+      ) {
+        return result as HandSelectionResult
       }
 
-      if (source === "hand") {
-        return handleHandCardSelection(cardIndex)
-      } else if (source === "field") {
-        return handleFieldCardSelection(cardIndex)
+      // If we get an unexpected result type, convert it to an error
+      return {
+        type: "ERROR",
+        data: { message: `Unexpected result type: ${result.type}` },
       }
-
-      return { type: "ERROR", message: "Invalid source" }
     },
 
-    placeSelectedCard: (): GameResult => {
+    selectFieldCard: (cardIndex: number): FieldSelectionResult => {
+      const result = handleFieldCardSelection(cardIndex)
+
+      // Type guard to ensure we only return FieldSelectionResult types
+      if (result.type === "SELECTION_UPDATED" || result.type === "ERROR") {
+        return result as FieldSelectionResult
+      }
+
+      // If we get an unexpected result type, convert it to an error
+      return {
+        type: "ERROR",
+        data: { message: `Unexpected result type: ${result.type}` },
+      }
+    },
+
+    placeSelectedCard: (): CardPlacementResult => {
       if (!state) {
-        return { type: "ERROR", message: "Game not initialized" }
+        return { type: "ERROR", data: { message: "Game not initialized" } }
       }
 
       if (phase !== "NO_MATCHES_DISCARD") {
-        return { type: "ERROR", message: "Invalid game phase for placing card" }
+        return { type: "ERROR", data: { message: "Invalid game phase for placing card" } }
       }
 
-      return placeSelectedCard()
+      const result = handlePlaceSelectedCard()
+
+      // Type guard to ensure we only return CardPlacementResult types
+      if (result.type === "CARD_PLACED" || result.type === "ERROR") {
+        return result as CardPlacementResult
+      }
+
+      return {
+        type: "ERROR",
+        data: { message: `Unexpected result type: ${result.type}` },
+      }
     },
 
-    captureCards: (): GameResult => {
+    captureCards: (): CaptureResult => {
       if (!state) {
-        return { type: "ERROR", message: "Game not initialized" }
+        return { type: "ERROR", data: { message: "Game not initialized" } }
       }
 
       if (phase !== "WAITING_FOR_FIELD_CARDS" && phase !== "WAITING_FOR_DECK_MATCH") {
-        return { type: "ERROR", message: "Invalid game phase for capturing cards" }
+        return { type: "ERROR", data: { message: "Invalid game phase for capturing cards" } }
       }
 
-      return captureCards()
+      const result = handleCaptureCards()
+
+      // Type guard to ensure we only return CaptureResult types
+      if (
+        result.type === "CAPTURE_COMPLETE" ||
+        result.type === "SCORE_UPDATE" ||
+        result.type === "ERROR"
+      ) {
+        return result as CaptureResult
+      }
+
+      return {
+        type: "ERROR",
+        data: { message: `Unexpected result type: ${result.type}` },
+      }
     },
 
-    makeKoiKoiDecision: (continuePlay: boolean): GameResult => {
+    makeKoiKoiDecision: (continuePlay: boolean): KoiKoiDecisionResult => {
       if (!state) {
-        return { type: "ERROR", message: "Game not initialized" }
+        return { type: "ERROR", data: { message: "Game not initialized" } }
       }
 
       if (phase !== "WAITING_FOR_KOI_DECISION") {
-        return { type: "ERROR", message: "Invalid game phase for koi-koi decision" }
+        return {
+          type: "ERROR",
+          data: { message: "Invalid game phase for koi-koi decision" },
+        }
       }
 
       if (continuePlay) {

@@ -2,6 +2,7 @@ import { createDeck } from "../core/deck.ts"
 import { createCollection } from "../core/collection.ts"
 import type { Collection, Deck } from "../core/types.ts"
 import { InvalidStateError } from "../errors.ts"
+import { YakuName } from "../scoring/types.ts"
 
 export type PlayerState = {
   hand: Collection
@@ -17,7 +18,7 @@ export type GameState = {
   currentPlayer: string
   currentMonth: number
   weather: string | null
-  completedYaku: Array<{ name: string; points: number }>
+  completedYaku: Array<{ name: YakuName; points: number }>
   debug?: boolean
   toJSON(): any
   toString(): string
