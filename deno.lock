@@ -1,25 +1,17 @@
 {
   "version": "4",
   "specifiers": {
-    "jsr:@std/assert@1": "1.0.8",
     "jsr:@std/cli@^1.0.8": "1.0.10",
     "jsr:@std/encoding@^1.0.5": "1.0.6",
     "jsr:@std/fmt@^1.0.3": "1.0.4",
     "jsr:@std/html@^1.0.3": "1.0.3",
     "jsr:@std/http@*": "1.0.12",
-    "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
     "jsr:@std/net@^1.0.4": "1.0.4",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/streams@^1.0.8": "1.0.8"
   },
   "jsr": {
-    "@std/assert@1.0.8": {
-      "integrity": "ebe0bd7eb488ee39686f77003992f389a06c3da1bbd8022184804852b2fa641b",
-      "dependencies": [
-        "jsr:@std/internal"
-      ]
-    },
     "@std/cli@1.0.10": {
       "integrity": "d047f6f4954a5c2827fe0963765ddd3d8b6cc7b7518682842645b95f571539dc"
     },
@@ -44,9 +36,6 @@
         "jsr:@std/path",
         "jsr:@std/streams"
       ]
-    },
-    "@std/internal@1.0.5": {
-      "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
     },
     "@std/media-types@1.1.0": {
       "integrity": "c9d093f0c05c3512932b330e3cc1fe1d627b301db33a4c2c2185c02471d6eaa4"
@@ -141,13 +130,12 @@
     "https://deno.land/std@0.224.0/io/write_all.ts": "24aac2312bb21096ae3ae0b102b22c26164d3249dff96dbac130958aa736f038"
   },
   "workspace": {
-    "dependencies": [
-      "jsr:@std/assert@1"
-    ],
+    "dependencies": [],
     "packageJson": {
       "dependencies": [
         "npm:tsup@^8.3.5",
-        "npm:typescript@^5.7.3"
+        "npm:typescript@^5.7.3",
+        "npm:vitest@^3.0.2"
       ]
     }
   }

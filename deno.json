@@ -3,16 +3,13 @@
   "version": "0.2.2",
   "description": "A modular JavaScript library for implementing Hanafuda card games, with a focus on Koi-Koi. Features core mechanics, scoring rules, and state management.",
   "tasks": {
-    "test": "deno test"
+    "test": "vitest run"
   },
   "compilerOptions": {
     "lib": [
       "deno.ns",
       "dom"
     ]
-  },
-  "imports": {
-    "@std/assert": "jsr:@std/assert@1"
   },
   "exports": {
     ".": "./src/index.ts",

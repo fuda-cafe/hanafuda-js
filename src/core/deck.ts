@@ -17,7 +17,7 @@ export interface Deck extends Iterable<number> {
   [Symbol.iterator]: () => IterableIterator<number>
   cards: number[]
   draw: () => number | null
-  drawMany: (count: number) => number[]
+  drawMany: (count?: number) => number[]
   placeOnTop: (cardIndex: number) => void
   placeOnBottom: (cardIndex: number) => void
   reshuffle: () => void
