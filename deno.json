@@ -1,6 +1,6 @@
 {
   "name": "@fudapop/hanafuda-js",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "A modular JavaScript library for implementing Hanafuda card games, with a focus on Koi-Koi. Features core mechanics, scoring rules, and state management.",
   "tasks": {
     "test": "deno test"
