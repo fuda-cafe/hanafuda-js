@@ -1,1 +1,1 @@
-export * from "./src/core/index.ts"
+export * from "./src/index.ts"

@@ -6,3 +6,6 @@
 DEVLOG*
 dist/
 example/
+node_modules/
+.npm
+*.tgz

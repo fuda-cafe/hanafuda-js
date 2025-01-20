@@ -15,8 +15,8 @@
     "strict": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "types": ["deno-types"]
+    "lib": ["ES2020", "DOM"],
+    "noEmit": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
