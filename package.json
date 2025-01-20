@@ -13,7 +13,12 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm,umd --dts --minify --umd-name hanafudaJS",
     "test": "deno test",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "version": "npm run build && git add -A dist",
+    "postversion": "git push && git push --tags",
+    "release:patch": "npm version patch -m \"Release %s\"",
+    "release:minor": "npm version minor -m \"Release %s\"",
+    "release:major": "npm version major -m \"Release %s\""
   },
   "keywords": [
     "hanafuda",
@@ -30,5 +35,8 @@
   "devDependencies": {
     "tsup": "^8.3.5",
     "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
