@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Improved current player tracking with centralized state management
 - Migrated test suite to Vitest for improved TypeScript support
 - Converted all test files to TypeScript
 - Simplified CI workflow to use single Node.js environment for testing

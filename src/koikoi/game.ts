@@ -82,19 +82,11 @@ export const createKoiKoiGame = (
   options: { rules?: RuleConfig; initialState?: GameState; debug?: boolean } = {}
 ): KoiKoiGame => {
   let state: GameState | null = null
-
-  let currentPlayer: string | null = null
-
   let phase: GamePhase | null = null
-
   let selectedHandCard: number | null = null
-
   const selectedFieldCards = new Set<number>()
-
   let drawnCard: number | null = null
-
   const scoring = createScoringManager(options.rules || KOIKOI_RULES)
-
   const debug = options.debug || false
 
   const log = (message: string) => {
@@ -112,14 +104,19 @@ export const createKoiKoiGame = (
       throw new Error("Phase can only be set in debug mode")
     }
     phase = newPhase
-    log(`Phase set to ${newPhase}`)
+    // log(`Phase set to ${newPhase}`)
   }
 
   /**
    * Switches to the next player and resets selection state
    */
   const switchPlayers = () => {
-    currentPlayer = currentPlayer === "player1" ? "player2" : "player1"
+    if (!state) return
+
+    // Update current player
+    state.currentPlayer = state.currentPlayer === "player1" ? "player2" : "player1"
+
+    // Reset selection state
     selectedHandCard = null
     selectedFieldCards.clear()
     drawnCard = null
@@ -135,11 +132,7 @@ export const createKoiKoiGame = (
       throw new InvalidStateError("Game not initialized")
     }
 
-    if (!currentPlayer) {
-      throw new InvalidStateError("Current player not set")
-    }
-
-    return state.players[currentPlayer].hand
+    return state.players[state.currentPlayer].hand
   }
 
   /**
@@ -184,11 +177,11 @@ export const createKoiKoiGame = (
     const placedCard = drawnCard
     drawnCard = null
 
-    if (!currentPlayer) {
+    if (!state.currentPlayer) {
       throw new InvalidStateError("Current player not set")
     }
 
-    const capturedPile = state.players[currentPlayer].captured
+    const capturedPile = state.players[state.currentPlayer].captured
     const completedYaku = scoring(capturedPile)
 
     if (completedYaku.length > 0) {
@@ -204,7 +197,7 @@ export const createKoiKoiGame = (
       phase = "ROUND_END"
       return {
         type: "ROUND_END",
-        message: `Exhaustive draw: ${currentPlayer} has no cards`,
+        message: `Exhaustive draw: ${state.currentPlayer} has no cards`,
       }
     }
     switchPlayers()
@@ -310,7 +303,7 @@ export const createKoiKoiGame = (
    * @throws {InvalidStateError}
    */
   const placeSelectedCard = (): GameResult => {
-    if (!state || !currentPlayer) {
+    if (!state || !state.currentPlayer) {
       throw new InvalidStateError("Game not initialized")
     }
 
@@ -339,7 +332,7 @@ export const createKoiKoiGame = (
    * @throws {InvalidStateError}
    */
   const captureCards = (): GameResult => {
-    if (!state || !currentPlayer) {
+    if (!state || !state.currentPlayer) {
       throw new InvalidStateError("Game not initialized")
     }
 
@@ -366,7 +359,7 @@ export const createKoiKoiGame = (
     fieldCards.forEach((card) => state!.field.remove(card))
 
     // Add to captured pile
-    const capturedPile = state!.players[currentPlayer].captured
+    const capturedPile = state!.players[state.currentPlayer].captured
     capturedPile?.addMany([sourceCard, ...fieldCards])
 
     // Check for completed yaku
@@ -415,7 +408,6 @@ export const createKoiKoiGame = (
     // Apply new state
     state = newState
     phase = "WAITING_FOR_HAND_CARD"
-
     return {
       type: "STATE_LOADED",
       data: { state: api.getState() },
@@ -448,7 +440,6 @@ export const createKoiKoiGame = (
       state = result.state
       phase = "WAITING_FOR_HAND_CARD"
       drawnCard = null
-      currentPlayer = result.firstPlayer
       return { state: api.getState()!, teyaku: result.teyaku }
     },
 
@@ -456,7 +447,7 @@ export const createKoiKoiGame = (
       state
         ? Object.freeze({
             ...state,
-            currentPlayer,
+            currentPlayer: state.currentPlayer,
             phase,
             selectedHandCard,
             selectedFieldCards: Array.from(selectedFieldCards),
@@ -523,7 +514,7 @@ export const createKoiKoiGame = (
       return {
         type: "ROUND_END",
         data: {
-          winner: currentPlayer,
+          winner: state.currentPlayer,
           yaku: state.completedYaku,
           phase,
         },
@@ -534,14 +525,14 @@ export const createKoiKoiGame = (
 
     setPhase: debug ? setPhase : undefined,
 
-    getCurrentPlayer: () => currentPlayer,
+    getCurrentPlayer: () => state?.currentPlayer ?? null,
 
-    getCurrentHand: () => (currentPlayer ? state!.players[currentPlayer].hand : null),
+    getCurrentHand: () => (state ? state.players[state.currentPlayer].hand : null),
 
     ...(debug && {
       setCurrentPlayer: (player: keyof GameState["players"]) => {
-        if (state!.players[player]) {
-          currentPlayer = player
+        if (state?.players[player]) {
+          state.currentPlayer = player
         } else {
           throw new Error(`Invalid player: ${player}`)
         }
