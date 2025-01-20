@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-01-21
+
+### Added
+
+- Example web application demonstrating library usage
+- Deno server implementation for running the example
+
 ### Changed
 
+- **Breaking**: Split card selection into separate `selectHandCard` and `selectFieldCard` methods
+- **Breaking**: Restructured `GameResult` type with specific selection data types
 - Improved current player tracking with centralized state management
 - Migrated test suite to Vitest for improved TypeScript support
 - Converted all test files to TypeScript
 - Simplified CI workflow to use single Node.js environment for testing
-- Restructured card selection into separate hand and field selection methods with specific result types
 - Improved test determinism with explicit card indices and states
 
 ## [0.2.2] - 2025-01-20
