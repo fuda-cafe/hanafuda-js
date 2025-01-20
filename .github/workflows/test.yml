@@ -20,4 +20,14 @@ jobs:
           node-version: "18"
       - run: npm ci
       - run: npm run build
-      - run: npm test # This will run deno test via the package.json script
+      - run: npm test
+
+  test-bun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun test
