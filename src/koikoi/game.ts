@@ -40,18 +40,31 @@ export type GameResult = {
   data?: any
 }
 
+/**
+ * Core game interface for Koi-Koi implementation.
+ * Provides methods for game actions and state management.
+ */
 export type KoiKoiGame = {
+  /** Start a new round with optional player IDs */
   startRound: (players?: string[]) => {
     state: GameState
     teyaku: Record<keyof GameState["players"], YakuResults>
   }
+  /** Get current game state */
   getState: () => GameState | null
+  /** Select a card from hand or field */
   selectCard: (cardIndex: number, source: "hand" | "field") => GameResult
+  /** Place selected card on field */
   placeSelectedCard: () => GameResult
+  /** Capture matching cards */
   captureCards: () => GameResult
+  /** Make koi-koi decision to continue or end round */
   makeKoiKoiDecision: (continuePlay: boolean) => GameResult
+  /** Load a saved game state */
   loadState: (state: GameState) => GameResult
+  /** Get current player ID */
   getCurrentPlayer: () => string | null
+  /** Get current player's hand */
   getCurrentHand: () => Collection | null
   setCurrentPlayer?: (player: keyof GameState["players"]) => void
   setPhase?: (phase: GamePhase) => void

@@ -1,6 +1,9 @@
 import type { CardType, FlowerType, Collection } from "../../core/types.ts"
 
-/** Unique identifier for the yaku */
+/**
+ * Unique identifier for a yaku scoring pattern.
+ * Maps to specific combinations of cards that can score points.
+ */
 export type YakuName =
   | "gokou"
   | "shikou"
@@ -18,7 +21,10 @@ export type YakuName =
   | "teshi"
   | "tsuki-fuda"
 
-/** Pattern for matching specific cards or card properties */
+/**
+ * Pattern for matching specific cards or card properties.
+ * Used to define the requirements for completing a yaku.
+ */
 export type CardPattern = {
   /** Specific card ID to match */
   id?: string
@@ -50,7 +56,10 @@ export type YakuPattern = {
   rules?: Record<string, RuleModifier>
 }
 
-/** Complete definition of a yaku scoring pattern */
+/**
+ * Complete definition of a yaku scoring pattern.
+ * Includes pattern requirements and scoring information.
+ */
 export type YakuDefinition = {
   /** Unique identifier for the yaku */
   name: YakuName
@@ -74,7 +83,10 @@ export type YakuResults = Array<{
   points: number
 }>
 
-/** Context for yaku checking */
+/**
+ * Context for yaku checking.
+ * Provides game state information needed for scoring.
+ */
 export type YakuContext = {
   /** Current month in the game (for tsuki-fuda yaku) */
   currentMonth: number
