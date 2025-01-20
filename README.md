@@ -167,6 +167,17 @@ if (loadedState) {
 }
 ```
 
+## Example Application
+
+An example web application demonstrating the library's features is available in the [example/](./example) directory. It provides a basic interface for playing Hanafuda Koi-Koi and showcases:
+
+- Game state management
+- Card selection and matching
+- Basic game flow implementation
+- State persistence using localStorage
+
+See the [example README](./example/README.md) for setup and running instructions.
+
 ## Game Phases
 
 The game follows these phases:
